@@ -276,7 +276,33 @@ public class Tuple implements GlobalConst{
  
     }
 
-  /**
+    /**
+     * Convert this field into intervaltype
+     *
+     * @param    fldNo   the field number
+     * @return           the converted intervaltype if success
+     *
+     * @exception   IOException I/O errors
+     * @exception   FieldNumberOutOfBoundException Tuple field number out of bound
+     */
+
+   public intervaltype getIntervalFld(int fldNo)
+    throws IOException, FieldNumberOutOfBoundException
+    {
+        intervaltype val;
+        if ( (fldNo > 0) && (fldNo <= fldCnt))
+        {
+            val = Convert.getIntervalValue(fldOffset[fldNo -1], data);
+            return val;
+
+        }
+        else
+            throw new FieldNumberOutOfBoundException (null, "TUPLE:TUPLE_FLDNO_OUT_OF_BOUND");
+
+    }
+
+
+    /**
    * Set this field to integer value
    *
    * @param	fldNo	the field number
@@ -338,6 +364,27 @@ public class Tuple implements GlobalConst{
       }
      else 
        throw new FieldNumberOutOfBoundException (null, "TUPLE:TUPLE_FLDNO_OUT_OF_BOUND");
+    }
+
+    /**
+     * Set this field to intervaltype value
+     *
+     * @param     fldNo   the field number
+     * @param     val     the intervaltype value
+     * @exception   IOException I/O errors
+     * @exception   FieldNumberOutOfBoundException Tuple field number out of bound
+     */
+
+    public Tuple setIntervalFld(int fldNo, intervaltype val)
+            throws IOException, FieldNumberOutOfBoundException
+    {
+        if ( (fldNo > 0) && (fldNo <= fldCnt))
+        {
+            Convert.setIntervalValue (val, fldOffset[fldNo -1], data);
+            return this;
+        }
+        else
+            throw new FieldNumberOutOfBoundException (null, "TUPLE:TUPLE_FLDNO_OUT_OF_BOUND");
     }
 
 
