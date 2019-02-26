@@ -1,9 +1,9 @@
 package global;
 
 public class intervaltype {
-    int s;
-    int e;
-    int l;
+    public int s;
+    public int e;
+    public int l;
 
     public void assign(int a, int b, int c) {
         this.s = a;

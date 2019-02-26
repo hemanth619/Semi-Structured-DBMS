@@ -42,6 +42,7 @@ public class TupleUtils
       int   t1_i,  t2_i;
       float t1_r,  t2_r;
       String t1_s, t2_s;
+      intervaltype t1_interval, t2_interval;
       
       switch (fldType.attrType) 
 	{
@@ -74,12 +75,25 @@ public class TupleUtils
 	  }catch (FieldNumberOutOfBoundException e){
 	    throw new TupleUtilsException(e, "FieldNumberOutOfBoundException is caught by TupleUtils.java");
 	  }
-	  
+
 	  // Now handle the special case that is posed by the max_values for strings...
 	  if(t1_s.compareTo( t2_s)>0)return 1;
 	  if (t1_s.compareTo( t2_s)<0)return -1;
 	  return 0;
-	default:
+
+	case AttrType.attrInterval:                // Compare two intervaltypes
+	  try {
+		t1_interval = t1.getIntervalFld(t1_fld_no);
+		t2_interval = t2.getIntervalFld(t2_fld_no);
+	  }catch (FieldNumberOutOfBoundException e){
+		  throw new TupleUtilsException(e, "FieldNumberOutOfBoundException is caught by TupleUtils.java");
+	  }
+	  if(t1_interval.s > t2_interval.s && t1_interval.e < t2_interval.e) return 1; // Containment
+	  if(t1_interval.s < t2_interval.s && t1_interval.e > t2_interval.e) return 2; // Enclosure
+	  if( (t1_interval.s > t2_interval.s && t1_interval.e > t2_interval.e) || (t1_interval.s < t2_interval.s && t1_interval.e < t2_interval.e) ) return 3; // Other types of overlap
+	  return 0; // no-overlap
+
+		default:
 	  
 	  throw new UnknowAttrType(null, "Don't know how to handle attrSymbol, attrNull");
 	  
@@ -116,7 +130,7 @@ public class TupleUtils
   /**
    *This function Compares two Tuple inn all fields 
    * @param t1 the first tuple
-   * @param t2 the secocnd tuple
+   * @param t2 the second tuple
    * @param type[] the field types
    * @param len the field numbers
    * @return  0        if the two are not equal,

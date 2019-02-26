@@ -34,6 +34,10 @@ public class CondExpr {
    */    
   public CondExpr    next;
 
+  /**
+   * Extra field flag to be used in some range based conditions.
+   * If the operands are of type attrInterval, then flag will be set to a non-negative integer.
+   */
   public int flag;
   
   /**
