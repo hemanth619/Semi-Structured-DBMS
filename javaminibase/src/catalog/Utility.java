@@ -275,8 +275,9 @@ ExtendedSystemDefs.MINIBASE_RELCAT.getInfo(relation, relRec);
  void loadRecordsUT(String relation, String fileName){};
 
  // LOADS INDEXES
- void loadIndexesUT(Tuple tuple, int attrCnt, int indexCnt,
-     AttrDesc [] attrs, IndexDesc [] indexes, void [] iFiles, RID rid ){};
+ //TODO: Commented Lines Here
+// void loadIndexesUT(Tuple tuple, int attrCnt, int indexCnt,
+//     AttrDesc [] attrs, IndexDesc [] indexes, void [] iFiles, RID rid ){};
 
 //-------------------------------
 // TYPECHECK INTS

@@ -1,4 +1,4 @@
-package btree;
+package btree.btree_javadoc_src;
 
 /**  IntegerKey: It extends the KeyClass.
  *   It defines the integer Key.

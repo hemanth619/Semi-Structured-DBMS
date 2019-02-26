@@ -1,4 +1,4 @@
-package btree;
+package btree.btree_javadoc_src;
 import global.*;
 
 /**  IndexData: It extends the DataClass.

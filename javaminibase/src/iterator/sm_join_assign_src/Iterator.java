@@ -1,4 +1,4 @@
-package iterator;
+package iterator.sm_join_assign_src;
 import global.*;
 import heap.*;
 import diskmgr.*;

@@ -5,7 +5,7 @@
  *      by Xiaohu Li (xiaohu@cs.wisc.edu)
  */
 
-package btree;
+package btree.btree_javadoc_src;
 
 import java.io.*;
 import java.lang.*;

@@ -1,4 +1,4 @@
-package btree;
+package btree.btree_javadoc_src;
 import chainexception.*;
 
 public class KeyNotMatchException extends ChainException

@@ -3,7 +3,7 @@
  * Copyright (c) 1998 UW.  All Rights Reserved.
  *        Author Xiaohu Li (xiaohu@cs.wisc.edu)
  */
-package btree;
+package btree.btree_javadoc_src;
 import global.*;
 
 /** KeyDataEntry: define (key, data) pair.

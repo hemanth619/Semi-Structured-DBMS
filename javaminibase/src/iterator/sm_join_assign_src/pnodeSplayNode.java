@@ -1,5 +1,5 @@
 
-package iterator;
+package iterator.sm_join_assign_src;
 
 /**
  * An element in the binary tree.

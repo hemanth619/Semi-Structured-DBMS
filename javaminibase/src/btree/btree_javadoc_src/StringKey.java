@@ -1,4 +1,4 @@
-package btree;
+package btree.btree_javadoc_src;
 
 /**  StringKey: It extends the KeyClass.
  *   It defines the string Key.

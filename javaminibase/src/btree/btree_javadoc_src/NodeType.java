@@ -1,4 +1,4 @@
-package btree;
+package btree.btree_javadoc_src;
 /**  nodetype:  define the type of node in B++ tree
  */
 public class NodeType {

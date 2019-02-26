@@ -1,4 +1,4 @@
-package iterator;
+package iterator.sm_join_assign_src;
 
 public class RelSpec {
   public int key;
