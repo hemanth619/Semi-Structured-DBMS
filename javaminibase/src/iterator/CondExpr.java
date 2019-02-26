@@ -30,6 +30,12 @@ public class CondExpr {
   public Operand operand2;
   
   /**
+   *To be used for range based conditions
+   *If the operands are of type attrInterval then flag to be set to some non-negative integer
+   */ 
+  public int flag;
+  
+  /**
    * Pointer to the next element in linked list
    */    
   public CondExpr    next;   

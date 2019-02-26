@@ -7,11 +7,12 @@ package global;
 
 public class AttrType {
 
-  public static final int attrString  = 0;
-  public static final int attrInteger = 1;
-  public static final int attrReal    = 2;
-  public static final int attrSymbol  = 3;
-  public static final int attrNull    = 4;
+  public static final int attrString  	= 0;
+  public static final int attrInteger 	= 1;
+  public static final int attrReal    	= 2;
+  public static final int attrSymbol  	= 3;
+  public static final int attrNull    	= 4;
+  public static final int attrInterval  = 5;
   
   public int attrType;
 
@@ -47,6 +48,8 @@ public class AttrType {
       return "attrSymbol";
     case attrNull:
       return "attrNull";
+    case attrInterval:
+    	return "attrInterval";
     }
     return ("Unexpected AttrType " + attrType);
   }
