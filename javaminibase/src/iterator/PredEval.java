@@ -89,6 +89,13 @@ public class PredEval
 		      comparison_type.attrType = in2[fld1-1].attrType;
 		    }
 		  break;
+		case AttrType.attrInterval:
+		  value.setHdr((short)1, val_type, null);
+		  value.setIntervalFld(1, temp_ptr.operand1.interval);
+		  tuple1 = value;
+		  comparison_type.attrType = AttrType.attrInterval;
+		  temp_ptr.flag = 1;
+		  break;
 		default:
 		  break;
 		}
@@ -121,6 +128,10 @@ public class PredEval
 		  else
 		    tuple2 = t2;
 		  break;
+		case AttrType.attrInterval:
+		  value.setHdr((short)1, val_type, null );
+		  value.setIntervalFld(1, temp_ptr.operand2.interval);
+		  tuple2 = value;
 		default:
 		  break;
 		}
@@ -133,33 +144,71 @@ public class PredEval
 		throw new PredEvalException (e,"TupleUtilsException is caught by PredEval.java");
 	      }
 	      op_res = false;
-	      
-	      switch (temp_ptr.op.attrOperator)
-		{
-		case AttrOperator.aopEQ:
-		  if (comp_res == 0) op_res = true;
-		  break;
-		case AttrOperator.aopLT:
-		  if (comp_res <  0) op_res = true;
-		  break;
-		case AttrOperator.aopGT:
-		  if (comp_res >  0) op_res = true;
-		  break;
-		case AttrOperator.aopNE:
-		  if (comp_res != 0) op_res = true;
-		  break;
-		case AttrOperator.aopLE:
-		  if (comp_res <= 0) op_res = true;
-		  break;
-		case AttrOperator.aopGE:
-		  if (comp_res >= 0) op_res = true;
-		  break;
-		case AttrOperator.aopNOT:
-		  if (comp_res != 0) op_res = true;
-		  break;
-		default:
-		  break;
-		}
+
+	      if (temp_ptr.flag == 1)
+	      {
+			  switch (temp_ptr.op.attrOperator)
+			  {
+				  case AttrOperator.aopEQ:
+				  	  // Check if the operands overlap AND if start and end values are equal
+					  if (comp_res != 0 && (temp_ptr.operand1.interval.s == temp_ptr.operand2.interval.s && temp_ptr.operand1.interval.e == temp_ptr.operand2.interval.e))
+					  {
+					  	op_res = true;
+					  }
+					  break;
+				  case AttrOperator.aopLT:
+					  if (comp_res ==  1)
+					  {
+					  	op_res = true;
+					  }
+					  break;
+				  case AttrOperator.aopGT:
+					  if (comp_res ==  2)
+					  {
+					  	op_res = true;
+					  }
+					  break;
+				  case AttrOperator.aopNE:
+				  	  // Check if the operands do not overlap AND if either start or end values are not equal
+					  if (comp_res == 0 && (temp_ptr.operand1.interval.s != temp_ptr.operand2.interval.s || temp_ptr.operand1.interval.e != temp_ptr.operand2.interval.e))
+					  {
+					  	op_res = true;
+					  }
+					  break;
+				  default:
+					  break;
+			  }
+		  }
+
+	      else
+		  {
+			  switch (temp_ptr.op.attrOperator)
+			  {
+				  case AttrOperator.aopEQ:
+					  if (comp_res == 0) op_res = true;
+					  break;
+				  case AttrOperator.aopLT:
+					  if (comp_res <  0) op_res = true;
+					  break;
+				  case AttrOperator.aopGT:
+					  if (comp_res >  0) op_res = true;
+					  break;
+				  case AttrOperator.aopNE:
+					  if (comp_res != 0) op_res = true;
+					  break;
+				  case AttrOperator.aopLE:
+					  if (comp_res <= 0) op_res = true;
+					  break;
+				  case AttrOperator.aopGE:
+					  if (comp_res >= 0) op_res = true;
+					  break;
+				  case AttrOperator.aopNOT:
+					  if (comp_res != 0) op_res = true;
+					  break;
+				  default:
+					  break;
+			  }
+		  }
 	      
 	      row_res = row_res || op_res;
 	      if (row_res == true)

@@ -105,7 +105,7 @@ public abstract class pnodePQ
    * @exception UnknowAttrType attrSymbol or attrNull encountered
    * @exception TupleUtilsException error in tuple compare routines
    */  
-  /*
+
   public boolean pnodeLE(pnode a, pnode b)throws IOException, UnknowAttrType, TupleUtilsException {
     if (sort_order.tupleOrder == TupleOrder.Ascending) 
       return pnodeCMP(a, b) <= 0;
@@ -113,7 +113,7 @@ public abstract class pnodePQ
       return pnodeCMP(a, b) >= 0;
     else throw new UnknowAttrType("error in pnodePQ.java"); 
   }
-  */
+
   /*
   virtual pnode&          front() = 0;             // access min item
   virtual void          del_front() = 0;         // delete min item

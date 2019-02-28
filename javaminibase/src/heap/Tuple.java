@@ -437,8 +437,12 @@ public void setHdr (short numFlds,  AttrType types[], short strSizes[])
    case AttrType.attrString:
      incr = (short) (strSizes[strCount] +2);  //strlen in bytes = strlen +2
      strCount++;
-     break;       
- 
+     break;
+
+   case AttrType.attrInterval:
+     incr = 12;
+     break;
+
    default:
     throw new InvalidTypeException (null, "TUPLE: TUPLE_TYPE_ERROR");
    }

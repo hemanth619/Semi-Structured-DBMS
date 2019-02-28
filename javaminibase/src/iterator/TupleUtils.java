@@ -88,10 +88,14 @@ public class TupleUtils
 	  }catch (FieldNumberOutOfBoundException e){
 		  throw new TupleUtilsException(e, "FieldNumberOutOfBoundException is caught by TupleUtils.java");
 	  }
-	  if(t1_interval.s > t2_interval.s && t1_interval.e < t2_interval.e) return 1; // Containment
-	  if(t1_interval.s < t2_interval.s && t1_interval.e > t2_interval.e) return 2; // Enclosure
-	  if( (t1_interval.s > t2_interval.s && t1_interval.e > t2_interval.e) || (t1_interval.s < t2_interval.s && t1_interval.e < t2_interval.e) ) return 3; // Other types of overlap
-	  return 0; // no-overlap
+	  if(t1_interval.s > t2_interval.s && t1_interval.e < t2_interval.e)
+	  	return 1; // Containment
+	  else if(t1_interval.s < t2_interval.s && t1_interval.e > t2_interval.e)
+	  	return 2; // Enclosure
+	  else if( (t1_interval.e < t2_interval.s) || (t1_interval.s > t2_interval.e ) )
+	  	return 0; // no-overlap
+	  else
+	  	return 3; // Other types of overlap
 
 		default:
 	  

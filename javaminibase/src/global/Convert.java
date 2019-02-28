@@ -165,25 +165,24 @@ public class Convert {
           throws java.io.IOException {
     InputStream in;
     DataInputStream instr;
-    int values[] = new int[3];
 
-    for (int i = 0; i < 3; i++) {
-      byte tmp[] = new byte[4];
+    byte tmp[] = new byte[4];
 
-      // copy the value from data array out to a tmp byte array
-      System.arraycopy(data, position + (4 * i), tmp, 0, 4);
+    // copy the value from data array out to a tmp byte array
+    System.arraycopy(data, position, tmp, 0, 12);
 
       /* creates a new data input stream to read data from the
        * specified input stream
        */
       in = new ByteArrayInputStream(tmp);
       instr = new DataInputStream(in);
-      values[i] = instr.readInt();
-
-    }
+      int s = instr.readInt();
+      int e = instr.readInt();
+      int l = instr.readInt();
 
     intervaltype value = new intervaltype();
-    value.assign(values[0], values[1], values[2]);
+    value.assign(s, e, l);
+
     return value;
   }
 
@@ -348,9 +347,7 @@ public class Convert {
   public static void setIntervalValue(intervaltype value, int position, byte[] data)
           throws java.io.IOException {
 
-    int[] values = new int[]{value.s, value.e, value.l};
 
-    for(int i = 0; i < 3; i++) {
       /* creates a new data output stream to write data to
        * underlying output stream
        */
@@ -358,14 +355,16 @@ public class Convert {
       DataOutputStream outstr = new DataOutputStream(out);
 
       // write the value to the output stream
-      outstr.writeInt(values[i]);
+      outstr.writeInt(value.s);
+      outstr.writeInt(value.e);
+      outstr.writeInt(value.l);
 
       // creates a byte array with this output stream size and the
       // valid contents of the buffer have been copied into it
       byte[] B = ((ByteArrayOutputStream) out).toByteArray();
 
       // copies the first 12 bytes of this byte array into data[]
-      System.arraycopy(B, 0, data, position + (4 * i), 4);
+      System.arraycopy(B, 0, data, position, 12);
 
     }
 
