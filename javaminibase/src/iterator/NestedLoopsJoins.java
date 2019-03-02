@@ -18,7 +18,7 @@ import java.io.*;
  *          foreach tuple s in S do
  *              if (ri == sj) then add (r, s) to the result.
  */
-
+// TODO: flag variables usage for nested loop joins
 public class NestedLoopsJoins  extends Iterator 
 {
   private AttrType      _in1[],  _in2[];

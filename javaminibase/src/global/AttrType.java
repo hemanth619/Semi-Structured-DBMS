@@ -47,6 +47,8 @@ public class AttrType {
 			return "attrSymbol";
 		case attrNull:
 			return "attrNull";
+		case attrInterval:
+			return "attrInterval";
 		}
 		return ("Unexpected AttrType " + attrType);
 	}

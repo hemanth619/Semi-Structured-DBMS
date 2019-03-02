@@ -36,6 +36,33 @@ public class Convert{
       return value;
     }
   
+  	public static IntervalType getIntervalValue (int position, byte []data) throws java.io.IOException {
+      InputStream in;
+      DataInputStream instr;
+      int start, end, level;
+      
+      byte tmp[] = new byte[12];
+      
+      // copy the value from data array out to a tmp byte array
+      System.arraycopy (data, position, tmp, 0, 12);
+      
+      /* creates a new data input stream to read data from the
+       * specified input stream
+       */
+      in = new ByteArrayInputStream(tmp);
+      instr = new DataInputStream(in);
+      
+      start = instr.readInt();
+      end = instr.readInt();
+      level = instr.readInt();
+      
+      IntervalType interval = new IntervalType();
+      interval.assign(start, end, level);
+      
+      
+      return interval;
+    }
+  
   /**
    * read 4 bytes from given byte array at the specified position
    * convert it to a float value
@@ -60,7 +87,7 @@ public class Convert{
        */
       in = new ByteArrayInputStream(tmp);
       instr = new DataInputStream(in);
-      value = instr.readFloat();  
+      value = instr.readFloat();
       
       return value;
     }
@@ -181,6 +208,28 @@ public class Convert{
       // copies the first 4 bytes of this byte array into data[] 
       System.arraycopy (B, 0, data, position, 4);
       
+    }
+  
+  public static void setIntervalValue (IntervalType value, int position, byte []data) throws java.io.IOException {
+      /* creates a new data output stream to write data to 
+       * underlying output stream
+       */
+      
+      OutputStream out = new ByteArrayOutputStream();
+      DataOutputStream outstr = new DataOutputStream (out);
+      
+      // write the value to the output stream
+      
+      outstr.writeInt(value.start);
+      outstr.writeInt(value.end);
+      outstr.writeInt(value.level);
+      
+      // creates a byte array with this output stream size and the
+      // valid contents of the buffer have been copied into it
+      byte []B = ((ByteArrayOutputStream) out).toByteArray();
+      
+      // copies the first 4 bytes of this byte array into data[] 
+      System.arraycopy (B, 0, data, position, 12);
     }
   
   /**

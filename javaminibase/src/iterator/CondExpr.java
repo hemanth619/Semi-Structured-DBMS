@@ -10,11 +10,12 @@ import global.*;
  */
 
 public class CondExpr {
-  
   /**
    * Operator like "<"
    */
-  public AttrOperator op;    
+  public AttrOperator op; 
+  
+  public int flag = Integer.MIN_VALUE;
   
   /**
    * Types of operands, Null AttrType means that operand is not a
@@ -46,6 +47,17 @@ public class CondExpr {
     operand2.integer = 0;
     
     next = null;
+  }
+  
+  public CondExpr(AttrType attrType1, AttrType attrType2) {
+	  operand1 = new Operand();
+	  operand2 = new Operand();
+	    
+	  operand1.integer = 0;
+	  operand2.integer = 0;
+	    
+	  next = null;
+	  int flag = 1;
   }
 }
 

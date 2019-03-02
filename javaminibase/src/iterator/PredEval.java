@@ -30,7 +30,7 @@ public class PredEval
 	   InvalidTypeException,
 	   FieldNumberOutOfBoundException,
 	   PredEvalException
-    {
+    {	
       CondExpr temp_ptr;
       int       i = 0;
       Tuple    tuple1 = null, tuple2 = null;
@@ -89,6 +89,12 @@ public class PredEval
 		      comparison_type.attrType = in2[fld1-1].attrType;
 		    }
 		  break;
+		case AttrType.attrInterval:
+			value.setHdr((short)1, val_type, null);
+			value.setIntervalFld(1, temp_ptr.operand1.interval);
+			tuple1 = value;
+			comparison_type.attrType = AttrType.attrInterval;
+			break;
 		default:
 		  break;
 		}
@@ -121,6 +127,12 @@ public class PredEval
 		  else
 		    tuple2 = t2;
 		  break;
+		case AttrType.attrInterval:
+			value.setHdr((short)1, val_type, null);
+			value.setIntervalFld(1, temp_ptr.operand2.interval);
+			tuple2 = value;
+			comparison_type.attrType = AttrType.attrInterval;
+			break;
 		default:
 		  break;
 		}
@@ -128,7 +140,7 @@ public class PredEval
 	      
 	      // Got the arguments, now perform a comparison.
 	      try {
-		comp_res = TupleUtils.CompareTupleWithTuple(comparison_type, tuple1, fld1, tuple2, fld2);
+		comp_res = TupleUtils.CompareTupleWithTuple(comparison_type, tuple1, fld1, tuple2, fld2, true);
 	      }catch (TupleUtilsException e){
 		throw new PredEvalException (e,"TupleUtilsException is caught by PredEval.java");
 	      }
@@ -137,16 +149,44 @@ public class PredEval
 	      switch (temp_ptr.op.attrOperator)
 		{
 		case AttrOperator.aopEQ:
-		  if (comp_res == 0) op_res = true;
+		  if (temp_ptr.type1.attrType == AttrType.attrInterval) {
+			  if (comp_res == 4) {
+				  temp_ptr.flag = 0;
+				  op_res = true;
+			  } else if (comp_res == 1 || comp_res == 2) {
+				  temp_ptr.flag = 1;
+				  op_res = true;
+			  }
+		  } else {
+			  if (comp_res == 0) op_res = true;
+		  }
 		  break;
 		case AttrOperator.aopLT:
-		  if (comp_res <  0) op_res = true;
+		  if (temp_ptr.type1.attrType == AttrType.attrInterval) {
+			  if (comp_res == 1) op_res = true;
+		  } else {
+			  if (comp_res <  0) op_res = true;
+		  }
 		  break;
 		case AttrOperator.aopGT:
-		  if (comp_res >  0) op_res = true;
+		  if (temp_ptr.type1.attrType == AttrType.attrInterval) {
+			  if (comp_res == 2) op_res = true;
+		  } else {
+			  if (comp_res >  0) op_res = true;
+		  }
 		  break;
 		case AttrOperator.aopNE:
-		  if (comp_res != 0) op_res = true;
+		  if (temp_ptr.type1.attrType == AttrType.attrInterval) {
+			  if (comp_res != 4) {
+				  temp_ptr.flag = 0;
+				  op_res = true;
+			  } else if (comp_res == 0) { // ARAVIND TODO: VERIFY THAT IT MIGHT NOT EVER HAPPEN
+				  temp_ptr.flag = 1;
+				  op_res = true;
+			  }
+		  } else {
+			  if (comp_res != 0) op_res = true;
+		  }
 		  break;
 		case AttrOperator.aopLE:
 		  if (comp_res <= 0) op_res = true;
