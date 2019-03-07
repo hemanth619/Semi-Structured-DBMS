@@ -8,8 +8,15 @@ public class IntervalType {
 	int start;
 	int end;
 	int level; // -1 is an invalid value, levels start from 0.
-//	boolean isValid;
+
+	//	boolean isValid;
 	
+	//Default Contructor
+	public IntervalType() {
+		this.start = -1;
+		this.end = -1;
+		this.level = 0;
+	}
 	public void assign(int start, int end, int level) {
 		try {
 			if (start < MINIMUM || end > MAXIMUM) {
@@ -45,6 +52,7 @@ public class IntervalType {
 	public void setLevel(int level) {
 		this.level = level;
 	}
+	
 	
 	
 }
