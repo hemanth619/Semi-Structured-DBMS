@@ -1,6 +1,17 @@
 package heap;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 import global.GlobalConst;
 import global.RID;
@@ -8,14 +19,19 @@ import global.SystemDefs;
 import heap.XMLRecord;
 
 import tests.TestDriver;
+import xmldb.InputTree;
+import xmldb.XMLInputTreeNode;
+import xmldb.XMLParser;
 
 public class XMLRecordTest extends TestDriver implements GlobalConst {
+
+	static XMLParser xmlParser = new XMLParser();
 
 	private final static boolean OK = true;
 	private final static boolean FAIL = false;
 	
 	private int choice;
-	private final static int reclen = 64;
+	private final static int reclen = 32;
 	
 	public XMLRecordTest() {
 		super("hptest");
@@ -105,14 +121,24 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 
 		if ( status == OK ) {
 			System.out.println ("  - Add " + choice + " records to the file\n");
-			for (int i =0; (i < choice) && (status == OK); i++) {
+			for (int i =0; (i < xmlParser.listOfXMLObjects.size()) && (status == OK); i++) {
 
 				//fixed length record
 				XMLRecord rec = new XMLRecord(reclen);
-				rec.start = i;
-				rec.end = i+1;
-				rec.level = i+2;
-				rec.tagName = "Akshay Rao Arun Kumar DBMSI Project Phase 2";
+				 XMLInputTreeNode node = xmlParser.listOfXMLObjects.get(i);
+				
+				
+				rec.start = node.interval.getStart();
+				rec.end = node.interval.getEnd();
+				rec.level = node.interval.getLevel();
+				rec.tagName = node.tagName;
+				
+				System.out.println("Setting Index: " + i);
+				
+//				rec.start = 1;
+//				rec.end = 2;
+//				rec.level = 1;
+//				rec.tagName = "Something";
 
 				try {
 					rid = f.insertRecord(rec.toByteArray());
@@ -132,7 +158,7 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 			}
 
 			try {
-				if ( f.getRecCnt() != choice ) {
+				if ( f.getRecCnt() != xmlParser.listOfXMLObjects.size() ) {
 					status = FAIL;
 					System.err.println ("*** File reports " + f.getRecCnt() + 
 							" records, not " + choice + "\n");
@@ -213,27 +239,8 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 						status = FAIL;
 						break;
 					}
-					String name = "Akshay Rao Arun Kumar DBMSI Project Phase 2";
 					
 					System.out.println(rec);
-
-//					if( (rec.start != 1)
-//							|| (rec.end != 2)
-//							|| (!name.equals(rec.tagName)) || (rec.level != 1) ) {
-//						System.err.println ("*** Record " + i
-//								+ " differs from what we inserted\n");
-//						
-//						System.err.println ("rec.start: "+ rec.start
-//								+ " should be " + 1 + "\n");
-//						System.err.println ("rec.end: "+ rec.end
-//								+ " should be " + 2 + "\n");
-//						System.err.println ("rec.level: "+ rec.level
-//								+ " should be " + 1 + "\n");
-//						System.err.println ("rec.name: " + rec.tagName
-//								+ " should be " + "Akshay" + "\n");
-//						status = FAIL;
-//						break;
-//					}
 				}	
 				++i;
 			}
@@ -246,7 +253,7 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 							"its page after finishing\n");
 					status = FAIL;
 				}
-				else if ( i != (choice) )
+				else if ( i != (xmlParser.listOfXMLObjects.size()) )
 				{
 					status = FAIL;
 
@@ -262,7 +269,26 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 		return status;
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException, SAXException, IOException, ParserConfigurationException {
+	
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setValidating(false);
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.parse(new FileInputStream(new File("/home/ronak/DBMSi Project/Phase2/dbmsiPhase2/javaminibase/src/xmldbTestXML/xml_sample_data.xml")));
+        
+    	Node root = doc.getDocumentElement();
+    	    	
+    	xmlParser.build(root);
+    	
+    	// xmlParser.BFS();
+    	
+    	xmlParser.preOrder(xmlParser.tree.root);
+    	System.out.println("---------------------------");
+    	System.out.println();
+    	xmlParser.BFSSetLevel();
+    	
+    	// xmlParser.BFSPrint();
+		
 		XMLRecordTest hd = new XMLRecordTest();
 		boolean dbstatus;
 

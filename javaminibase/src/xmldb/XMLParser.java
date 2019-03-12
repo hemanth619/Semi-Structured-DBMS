@@ -2,8 +2,9 @@ package xmldb;
 
 import java.io.File;
 import java.io.FileInputStream;
-
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -14,29 +15,35 @@ import org.w3c.dom.*;
 
 public class XMLParser {
 	
+	public List<XMLInputTreeNode> listOfXMLObjects = new ArrayList<>();
+	
 	//static int depthOfTree = 1;
-	 static InputTree tree = new InputTree();
+	public XMLParser() {
+		
+	}
+	 
+	public static InputTree tree = new InputTree();
 	 
     public static void main(String[] args) throws Exception {
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        dbf.setValidating(false);
-        DocumentBuilder db = dbf.newDocumentBuilder();
-        Document doc = db.parse(new FileInputStream(new File("/Users/akshayrao/git/dbmsiPhase2/javaminibase/src/xmldbTestXML/xml_sample_data.xml")));
-        
-    	Node root = doc.getDocumentElement();
-    	    	
-    	build(root);
-    	
-    	BFS(false);
-    	
-    	preOrder(tree.root);
-    	System.out.println("---------------------------");
-    	System.out.println();
-    	BFS(true);
+//        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+//        dbf.setValidating(false);
+//        DocumentBuilder db = dbf.newDocumentBuilder();
+//        Document doc = db.parse(new FileInputStream(new File("/home/ronak/DBMSi Project/Phase2/dbmsiPhase2/javaminibase/src/xmldbTestXML/xml_sample_data.xml")));
+//        
+//    	Node root = doc.getDocumentElement();
+//    	    	
+//    	build(root);
+//    	
+//    	BFS();
+//    	
+//    	preOrder(tree.root);
+//    	System.out.println("---------------------------");
+//    	System.out.println();
+//    	BFS();
     }
     
-     static int intervalCounter = 1;
-     static void preOrder(XMLInputTreeNode node) {
+     public static int intervalCounter = 1;
+     public void preOrder(XMLInputTreeNode node) {
     	if (node == null)
     		return;
     	
@@ -48,7 +55,7 @@ public class XMLParser {
     }
     
     // pass the root node here
-    public static void clean(Node node) {
+    public void clean(Node node) {
       NodeList childNodes = node.getChildNodes();
       
       for (int n = childNodes.getLength() - 1; n >= 0; n--) {
@@ -72,13 +79,13 @@ public class XMLParser {
       }
     }
     
-    static void build(Node rootNode) {
+    public void build(Node rootNode) {
     	tree.root = new XMLInputTreeNode(rootNode.getNodeName());
     	clean(rootNode);
     	buildUtil(rootNode, tree.root); 	
     }
     
-    static void buildUtil(Node node, XMLInputTreeNode treeNode) {
+    public void buildUtil(Node node, XMLInputTreeNode treeNode) {
     	NodeList list = node.getChildNodes(); // get child nodes for the treeNode
     	
     	for (int i=0, len = list.getLength(); i<len; i++) {
@@ -87,7 +94,7 @@ public class XMLParser {
     		XMLInputTreeNode treeChildNode = null;
     		
     		if (!childNode.getNodeName().equals("#text")) {
-    			treeChildNode = new XMLInputTreeNode(childNode.getNodeName()); // make a child node for our data structure
+    			treeChildNode = new XMLInputTreeNode(childNode.getNodeName().substring(0, childNode.getNodeName().length() < 5 ? childNode.getNodeName().length() : 5)); // make a child node for our data structure
     		}
     		
     		/* 1. Handle atrributes */
@@ -128,7 +135,40 @@ public class XMLParser {
     	}
     }
     
-    static void BFS(boolean print) {
+    public void BFSPrint() {
+    	XMLInputTreeNode root = tree.root;
+    	
+    	Queue<XMLInputTreeNode> queue = new LinkedList<>();
+    	queue.add(root);
+    	
+    	while (true) {
+    		int nodeCount = queue.size();
+    		
+    		if (nodeCount == 0)
+    			break;
+    		
+    		while (nodeCount > 0) {
+    			XMLInputTreeNode node = queue.peek();
+    			System.out.println("Tag Name: " + node.tagName);
+    			System.out.println("Interval start value: " + node.interval.getStart());
+    			System.out.println("Interval start end value: " + node.interval.getEnd());
+    			System.out.println("Interval start level value: " + node.interval.getLevel());
+    			
+    			queue.remove();
+    			if (node.children.size() != 0) {
+    				for (XMLInputTreeNode childNode: node.children) {
+    					queue.add(childNode);
+    				}
+    			}
+    			nodeCount--;
+    		}
+    		
+    		System.out.println();
+    	}
+    }
+    
+    
+    public void BFSSetLevel() {
     	XMLInputTreeNode root = tree.root;
     	
     	Queue<XMLInputTreeNode> queue = new LinkedList<>();
@@ -144,14 +184,16 @@ public class XMLParser {
     		
     		while (nodeCount > 0) {
     			XMLInputTreeNode node = queue.peek();
-    			if(print) {
-	    			System.out.println("Tag Name: " + node.tagName);
-	    			System.out.println("Interval start value: " + node.interval.getStart());
-	    			System.out.println("Interval start end value: " + node.interval.getEnd());
-	    			System.out.println("Interval start level value: " + node.interval.getLevel());
-    			}
+//    			if(print) {
+//	    			System.out.println("Tag Name: " + node.tagName);
+//	    			System.out.println("Interval start value: " + node.interval.getStart());
+//	    			System.out.println("Interval start end value: " + node.interval.getEnd());
+//	    			System.out.println("Interval start level value: " + node.interval.getLevel());
+//    			}
     			
     			node.interval.setLevel(level);
+    			listOfXMLObjects.add(node);
+    			
     			queue.remove();
     			if (node.children.size() != 0) {
     				for (XMLInputTreeNode childNode: node.children) {

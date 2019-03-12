@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class XMLInputTreeNode {
 	public String tagName;
-    IntervalType interval;
+    public IntervalType interval;
    
 
     public ArrayList<XMLInputTreeNode> children;
