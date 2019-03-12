@@ -15,7 +15,7 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 	private final static boolean FAIL = false;
 	
 	private int choice;
-	private final static int reclen = 32;
+	private final static int reclen = 64;
 	
 	public XMLRecordTest() {
 		super("hptest");
@@ -112,7 +112,7 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 				rec.start = i;
 				rec.end = i+1;
 				rec.level = i+2;
-				rec.tagName = "Akshay";
+				rec.tagName = "Akshay Rao Arun Kumar DBMSI Project Phase 2";
 
 				try {
 					rid = f.insertRecord(rec.toByteArray());
@@ -213,7 +213,7 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 						status = FAIL;
 						break;
 					}
-					String name = "Akshay";
+					String name = "Akshay Rao Arun Kumar DBMSI Project Phase 2";
 					
 					System.out.println(rec);
 
