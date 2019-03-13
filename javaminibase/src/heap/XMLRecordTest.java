@@ -42,7 +42,7 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 
 		System.out.println ("\n" + "Running " + testName() + " tests...." + "\n");
 
-		SystemDefs sysdef = new SystemDefs(dbpath,100,100,"Clock");
+		SystemDefs sysdef = new SystemDefs(dbpath,10000,10000,"Clock");
 
 		// Kill anything that might be hanging around
 		String newdbpath;
