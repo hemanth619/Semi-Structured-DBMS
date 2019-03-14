@@ -275,6 +275,27 @@ public class Tuple implements GlobalConst{
        throw new FieldNumberOutOfBoundException (null, "TUPLE:TUPLE_FLDNO_OUT_OF_BOUND");
  
     }
+   
+   public IntervalType getIntervalFld(int fldNo) throws IOException, FieldNumberOutOfBoundException {
+	   IntervalType val;
+	   
+	   if ((fldNo > 0) && (fldNo <= fldCnt)) {
+		   val = Convert.getIntervalValue(fldOffset[fldNo-1], data);
+		   return val;
+	   } else {
+		   throw new FieldNumberOutOfBoundException(null, "TUPLE:TUPLE_FLDNO_OUT_OF_BOUND");
+	   }	   
+   }
+   
+   public Tuple setIntervalFld(int fldNo, IntervalType val) throws IOException, FieldNumberOutOfBoundException {
+	   if ( (fldNo > 0) && (fldNo <= fldCnt))
+	     {
+			Convert.setIntervalValue (val, fldOffset[fldNo -1], data);
+			return this;
+	     }
+	    else 
+	     throw new FieldNumberOutOfBoundException (null, "TUPLE:TUPLE_FLDNO_OUT_OF_BOUND"); 
+   }
 
   /**
    * Set this field to integer value
@@ -375,33 +396,36 @@ public void setHdr (short numFlds,  AttrType types[], short strSizes[])
   short incr;
   int i;
 
-  for (i=1; i<numFlds; i++)
-  {
-    switch(types[i-1].attrType) {
-    
-   case AttrType.attrInteger:
-     incr = 4;
-     break;
-
-   case AttrType.attrReal:
-     incr =4;
-     break;
-
-   case AttrType.attrString:
-     incr = (short) (strSizes[strCount] +2);  //strlen in bytes = strlen +2
-     strCount++;
-     break;       
+  for (i=1; i<numFlds; i++) {
+   
+	  switch(types[i-1].attrType) {
+	   case AttrType.attrInteger:
+	     incr = 4;
+	     break;
+	
+	   case AttrType.attrReal:
+	     incr = 4;
+	     break;
+	
+	   case AttrType.attrString:
+	     incr = (short) (strSizes[strCount] +2);  //strlen in bytes = strlen +2
+	     strCount++;
+	     break;       
+	 
+	   case AttrType.attrInterval:
+		   incr = 12;
+		   break;
+	   default:
+	    throw new InvalidTypeException (null, "TUPLE: TUPLE_TYPE_ERROR");
+	  }
+	  
+	  fldOffset[i]  = (short) (fldOffset[i-1] + incr);
+	  Convert.setShortValue(fldOffset[i], pos, data);
+	  pos +=2;
  
-   default:
-    throw new InvalidTypeException (null, "TUPLE: TUPLE_TYPE_ERROR");
-   }
-  fldOffset[i]  = (short) (fldOffset[i-1] + incr);
-  Convert.setShortValue(fldOffset[i], pos, data);
-  pos +=2;
- 
-}
- switch(types[numFlds -1].attrType) {
-
+  }
+  
+  switch(types[numFlds -1].attrType) {
    case AttrType.attrInteger:
      incr = 4;
      break;
@@ -413,6 +437,10 @@ public void setHdr (short numFlds,  AttrType types[], short strSizes[])
    case AttrType.attrString:
      incr =(short) ( strSizes[strCount] +2);  //strlen in bytes = strlen +2
      break;
+     
+   case AttrType.attrInterval:
+	 incr = 12;
+	 break;
 
    default:
     throw new InvalidTypeException (null, "TUPLE: TUPLE_TYPE_ERROR");

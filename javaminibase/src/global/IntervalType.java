@@ -17,6 +17,7 @@ public class IntervalType {
 		this.end = -1;
 		this.level = 0;
 	}
+  
 	public void assign(int start, int end, int level) {
 		try {
 			if (start < MINIMUM || end > MAXIMUM) {
@@ -33,7 +34,7 @@ public class IntervalType {
 //			this.isValid = false;
 		}
 	}
-	
+  
 	public int getStart() {
 		return start;
 	}
@@ -51,8 +52,5 @@ public class IntervalType {
 	}
 	public void setLevel(int level) {
 		this.level = level;
-	}
-	
-	
-	
+	}	
 }

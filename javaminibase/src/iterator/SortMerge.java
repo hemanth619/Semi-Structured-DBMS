@@ -279,7 +279,7 @@ public class SortMerge extends Iterator implements GlobalConst
 	      // is ascending or descending,
 	      // this loop will be modified.
 	      comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
-							  jc_in1, tuple2, jc_in2);
+							  jc_in1, tuple2, jc_in2, false);
 	      while ((comp_res < 0 && _order.tupleOrder == TupleOrder.Ascending) ||
 		     (comp_res > 0 && _order.tupleOrder == TupleOrder.Descending))
 		{
@@ -289,11 +289,11 @@ public class SortMerge extends Iterator implements GlobalConst
 		  }
 		  
 		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
-							      jc_in1, tuple2, jc_in2);
+							      jc_in1, tuple2, jc_in2, false);
 		}
 	      
 	      comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
-							  jc_in1, tuple2, jc_in2);
+							  jc_in1, tuple2, jc_in2, false);
 	      while ((comp_res > 0 && _order.tupleOrder == TupleOrder.Ascending) ||
 		     (comp_res < 0 && _order.tupleOrder == TupleOrder.Descending))
 		{
@@ -304,7 +304,7 @@ public class SortMerge extends Iterator implements GlobalConst
 		    }
 		  
 		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
-							      jc_in1, tuple2, jc_in2);
+							      jc_in1, tuple2, jc_in2, false);
 		}
 	      
 	      if (comp_res != 0)
@@ -320,7 +320,7 @@ public class SortMerge extends Iterator implements GlobalConst
 	      io_buf2.init(_bufs2,       1, t2_size, temp_file_fd2);
 	      
 	      while (TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
-						      jc_in1, TempTuple1, jc_in1) == 0)
+						      jc_in1, TempTuple1, jc_in1, false) == 0)
 		{
 		  // Insert tuple1 into io_buf1
 		  try {
@@ -337,7 +337,7 @@ public class SortMerge extends Iterator implements GlobalConst
 		}
 	      
 	      while (TupleUtils.CompareTupleWithTuple(sortFldType, tuple2,
-						      jc_in2, TempTuple2, jc_in2) == 0)
+						      jc_in2, TempTuple2, jc_in2, false) == 0)
 		{
 		  // Insert tuple2 into io_buf2
 		  
