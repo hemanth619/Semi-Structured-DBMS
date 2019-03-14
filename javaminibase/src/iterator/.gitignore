@@ -34,3 +34,6 @@
 /pnodePQ.class
 /pnodeSplayNode.class
 /pnodeSplayPQ.class
+/XMLParser.class
+/XMLParserTree.class
+/XMLInputTreeNode.class
