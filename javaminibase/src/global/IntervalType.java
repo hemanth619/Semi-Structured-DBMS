@@ -5,9 +5,9 @@ public class IntervalType {
 	public static final int MINIMUM = -100000;
 	public static final int MAXIMUM = 100000;
 	
-	int start;
-	int end;
-	int level; // -1 is an invalid value, levels start from 0.
+	public int start;
+	public int end;
+	public int level; // -1 is an invalid value, levels start from 0.
 
 	//	boolean isValid;
 	
