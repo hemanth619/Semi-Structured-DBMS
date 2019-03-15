@@ -105,7 +105,7 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 
 		System.out.println ("  - Create a heap file\n");
 		try {
-			f = new Heapfile("file_1");
+			f = new Heapfile("ABXYZ");
 		}
 		catch (Exception e) {
 			status = FAIL;
@@ -182,6 +182,7 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
 
 			try {
 				scan = f.openScan();
+				System.out.println(f.getRecCnt());
 			}
 			catch (Exception e) {
 				status = FAIL;
@@ -274,7 +275,7 @@ public class XMLRecordTest extends TestDriver implements GlobalConst {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setValidating(false);
         DocumentBuilder db = dbf.newDocumentBuilder();
-        Document doc = db.parse(new FileInputStream(new File("/home/ronak/DBMSi Project/Phase2/dbmsiPhase2/javaminibase/src/xmldbTestXML/xml_sample_data.xml")));
+        Document doc = db.parse(new FileInputStream(new File("xmldbTestXML/sample_data.xml")));
         
     	Node root = doc.getDocumentElement();
     	    	

@@ -74,7 +74,7 @@ public abstract class pnodePQ
    *                           <code>attrNull</code> encountered
    * @exception TupleUtilsException error in tuple compare routines
    */
-  public int pnodeCMP(pnode a, pnode b) 
+  public int pnodeCMP(pnode a, pnode b)
          throws IOException, UnknowAttrType, TupleUtilsException {
     int ans = TupleUtils.CompareTupleWithTuple(fld_type, a.tuple, fld_no, b.tuple, fld_no, false);
     return ans;

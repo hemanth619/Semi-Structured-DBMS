@@ -4,7 +4,7 @@ import global.Convert;
 import global.IntervalType;
 
 
-class XMLRecord  {
+public class XMLRecord  {
 	
 	IntervalType interval;
 	String tagName;

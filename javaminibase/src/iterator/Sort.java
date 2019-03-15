@@ -492,7 +492,9 @@ public class Sort extends Iterator implements GlobalConst
       lastElem.setStrFld(_sort_fld, s);
       break;
     case AttrType.attrInterval:
-    	lastElem.setIntervalFld(_sort_fld, new IntervalType(IntervalType.MINIMUM, IntervalType.MINIMUM, -1));
+        IntervalType minVal = new IntervalType();
+        minVal.assign(IntervalType.MAXIMUM, IntervalType.MAXIMUM, -1);
+        lastElem.setIntervalFld(_sort_fld, minVal);
     	break;
     default:
       // don't know how to handle attrSymbol, attrNull
@@ -537,7 +539,9 @@ public class Sort extends Iterator implements GlobalConst
       lastElem.setStrFld(_sort_fld, s);
       break;
     case AttrType.attrInterval:
-    	lastElem.setIntervalFld(_sort_fld, new IntervalType(IntervalType.MAXIMUM, IntervalType.MAXIMUM, -1));
+        IntervalType maxVal = new IntervalType();
+        maxVal.assign(IntervalType.MAXIMUM, IntervalType.MAXIMUM, -1);
+    	lastElem.setIntervalFld(_sort_fld, maxVal);
     	break;
     default:
       // don't know how to handle attrSymbol, attrNull

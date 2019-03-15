@@ -45,6 +45,7 @@ public class TupleUtils
       float t1_r,  t2_r;
       String t1_s, t2_s;
       IntervalType t1_interval, t2_interval;
+
       
       switch (fldType.attrType) 
 	{
