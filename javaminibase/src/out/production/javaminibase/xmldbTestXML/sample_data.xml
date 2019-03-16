@@ -72,6 +72,9 @@
             <BINDING from="858" to="858">
                 <Descr>UBIQUITIN (BY SIMILARITY)</Descr>
             </BINDING>
+            <Test>
+                <Hi>What</Hi>
+            </Test>
         </Features>
     </Entry>
 </root>

@@ -173,8 +173,13 @@ class XMLInsert implements GlobalConst {
             CondExpr[] outFilter = new CondExpr[1];
             AttrType attrType = new AttrType(AttrType.attrString);
             CondExpr ce = new CondExpr(attrType, attrType);
-            ce.type1 = new AttrType(AttrType.attrString);
-            ce.type2 = new AttrType(AttrType.attrString);
+//            ce.type1 = new AttrType(AttrType.attrSymbol);
+//            ce.type2 = new AttrType(AttrType.attrSymbol);
+//
+//            ce.operand1 = new Operand();
+//            ce.operand1.symbol = new FldSpec (new RelSpec(RelSpec.outer),1);
+//            ce.operand2 = new Operand();
+//            ce.operand2.string = searchTagName;
 
             //ce.operand2.string = "root";
             outFilter[0] = ce;
@@ -230,7 +235,7 @@ class XMLInsert implements GlobalConst {
         // xmlParser.BFSPrint();
 
         XMLInsert xmlinsert = new XMLInsert();
-        xmlinsert.heapFileScan("*");
+        xmlinsert.heapFileScan("Org");
 
     }
 }
