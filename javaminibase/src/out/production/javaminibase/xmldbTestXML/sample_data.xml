@@ -46,7 +46,7 @@
         <Keyword>Ligase</Keyword>
         <Features>
             <DOMAIN from="77" to="88">
-                <Descr>ASP/GLU-RICH (ACIDIC)</Descr>
+                <Descr prim_id="PF00657">ASP/GLU-RICH (ACIDIC)</Descr>
             </DOMAIN>
             <DOMAIN from="127" to="150">
                 <Descr>PRO-RICH</Descr>
@@ -72,9 +72,6 @@
             <BINDING from="858" to="858">
                 <Descr>UBIQUITIN (BY SIMILARITY)</Descr>
             </BINDING>
-            <Test>
-                <Hi>What</Hi>
-            </Test>
         </Features>
     </Entry>
 </root>
