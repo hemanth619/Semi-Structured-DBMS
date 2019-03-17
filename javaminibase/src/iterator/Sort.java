@@ -566,7 +566,7 @@ public class Sort extends Iterator implements GlobalConst
    * @exception IOException from lower layers
    * @exception SortException something went wrong in the lower layer. 
    */
-  public Sort(AttrType[] in,         
+  public Sort(AttrType[] in,      
 	      short      len_in,             
 	      short[]    str_sizes,
 	      Iterator   am,                 

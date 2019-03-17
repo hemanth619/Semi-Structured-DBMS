@@ -73,9 +73,11 @@ public class Projection
 		  break;
 		case AttrType.attrString:
 		  Jtuple.setStrFld(i+1, t2.getStrFld(perm_mat[i].offset));
+//		  System.out.println("Tagname: "+Jtuple.getStrFld(i+1));
 		  break;
 		case AttrType.attrInterval:
 			Jtuple.setIntervalFld(i+1, t2.getIntervalFld(perm_mat[i].offset));
+//			System.out.println("Start: "+Jtuple.getIntervalFld(i+1).start+" End: "+Jtuple.getIntervalFld(i+1).end+" Level: "+Jtuple.getIntervalFld(i+1).level);
 			break;
 		default:
 		  

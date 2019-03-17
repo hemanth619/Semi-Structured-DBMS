@@ -45,7 +45,7 @@ public class PredEval
 		boolean   op_res = false, row_res = false, col_res = true;
 		Tuple t = new Tuple();
 
-		if (p == null || p[0].operand2.string.equals("*"))
+		if (in2 != null && in2[0].attrType == AttrType.attrString && (p == null || p[0].operand2.string.equals("*")))
 		{
 			return true;
 		}

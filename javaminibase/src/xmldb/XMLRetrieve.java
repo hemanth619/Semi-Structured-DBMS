@@ -421,8 +421,8 @@ class XMLRetrieve implements GlobalConst {
         FldSpec [] proj_list = new FldSpec[4];
         proj_list[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
         proj_list[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
-        proj_list[2] = new FldSpec(new RelSpec(RelSpec.outer), 1);
-        proj_list[3] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+        proj_list[2] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+        proj_list[3] = new FldSpec(new RelSpec(RelSpec.innerRel), 2);
 
         AttrType [] jtype = new AttrType[4];
         jtype[0] = new AttrType (AttrType.attrInterval);
@@ -455,7 +455,7 @@ class XMLRetrieve implements GlobalConst {
             System.err.println (""+e);
             e.printStackTrace();
         }
-
+        HashSet<String > tupleSet = new HashSet<String>();
         if (status != OK) {
             //bail out
             System.err.println ("*** Error constructing NestedLoop");
@@ -467,33 +467,49 @@ class XMLRetrieve implements GlobalConst {
         try{
             while(!done){
                 t = sm.get_next();
-                if(t == null){
+                if(t == null) {
                     done = true;
                     break;
                 }
                 iteasd++;
-//                byte[] tupleArray = t.getTupleByteArray();
-//                IntervalType i = t.getIntervalFld(1);
-////                String tagname = t.getStrFld(2);
-////                IntervalType j = t.getIntervalFld(3);
-//                IntervalType j = t.getIntervalFld(2);
-////                String tagname2 = t.getStrFld(4);
-//                XMLRecord rec = new XMLRecord(t);
-////                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
+                byte[] tupleArray = t.getTupleByteArray();
+                IntervalType i = t.getIntervalFld(1);
+                String tagname = t.getStrFld(2);
+//                IntervalType j = t.getIntervalFld(3);
+                IntervalType j = t.getIntervalFld(3);
+                String tagname2 = t.getStrFld(4);
+                XMLRecord rec = new XMLRecord(t);
+                String result = "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2;
+                tupleSet.add(result);
+                // System.out.println( result);
 //                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level);
 
                 
             }
+            
         } catch(Exception e){
             e.printStackTrace();
         }
+        for (String result: tupleSet) {
+        	System.out.println(result);
+        }
+//        for(Tuple tuple: tupleSet) {
+//        	IntervalType i = tuple.getIntervalFld(1);
+//            String tagname = tuple.getStrFld(2);
+////            IntervalType j = t.getIntervalFld(3);
+//            IntervalType j = t.getIntervalFld(3);
+//            String tagname2 = t.getStrFld(4);
+//            XMLRecord rec = new XMLRecord(t);
+//            tupleSet.add(t);
+////            System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
+//        }
 
         System.out.println("Records  returned by SortMerge: " + iteasd);
     }
     
     public void QP3(){
 
-    	String[] tagNames2 = {"root", "Entry", "Org"};
+    	String[] tagNames2 = {"root", "Org"};
     	
     	List<FileScan> fileScanIterators = new ArrayList<FileScan>();
     	
@@ -502,7 +518,7 @@ class XMLRetrieve implements GlobalConst {
     		fileScanIterators.add(this.tagBasedSearchReturnFileScan(tagName));
     	}
     	
-    	this.createCondExprQP3("root", "Entry", "AD", fileScanIterators.get(0), fileScanIterators.get(1));
+    	this.createCondExprQP3("root", "Org", "AD", fileScanIterators.get(0), fileScanIterators.get(1));
     }
     
     
