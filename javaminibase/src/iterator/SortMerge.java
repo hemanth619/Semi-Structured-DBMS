@@ -280,6 +280,42 @@ public class SortMerge extends Iterator implements GlobalConst
 	      // this loop will be modified.
 	      comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
 							  jc_in1, tuple2, jc_in2, false);
+	      
+	      /* change */
+	      
+	      TempTuple1.tupleCopy(tuple1);
+	      TempTuple2.tupleCopy(tuple2); 
+	      
+	      io_buf1.init(_bufs1,       1, t1_size, temp_file_fd1);
+	      io_buf2.init(_bufs2,       1, t2_size, temp_file_fd2);
+	      
+	      // while this is not a containment and the next one in tuple1 is not null
+	      while ((comp_res != 1) && (tuple1 = p_i1.get_next()) != null) {
+	    	  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+					  jc_in1, tuple2, jc_in2, false);
+	    	  continue;
+	      }
+	      
+    	  io_buf1.Put(tuple1);
+    	  io_buf2.Put(tuple2);
+    	  
+    	  while ((comp_res == 1) && (tuple1 = p_i1.get_next()) != null) {
+    		  io_buf1.Put(tuple1);
+    		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+					  jc_in1, tuple2, jc_in2, false);
+    		  continue;
+    	  }
+    	  
+    	  
+    	  while ((comp_res == 1) && (tuple2 = p_i2.get_next()) != null) {
+    		  io_buf2.Put(tuple2);
+    		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, TempTuple1,
+					  jc_in1, tuple2, jc_in2, false);
+    		  continue;
+    	  }
+    	  
+	      /* change */
+	      
 	      while ((comp_res < 0 && _order.tupleOrder == TupleOrder.Ascending) ||
 		     (comp_res > 0 && _order.tupleOrder == TupleOrder.Descending))
 		{
@@ -312,12 +348,12 @@ public class SortMerge extends Iterator implements GlobalConst
 		  process_next_block = true;
 		  continue;
 		}
-	      
-	      TempTuple1.tupleCopy(tuple1);
-	      TempTuple2.tupleCopy(tuple2); 
-	      
-	      io_buf1.init(_bufs1,       1, t1_size, temp_file_fd1);
-	      io_buf2.init(_bufs2,       1, t2_size, temp_file_fd2);
+//	      
+//	      TempTuple1.tupleCopy(tuple1);
+//	      TempTuple2.tupleCopy(tuple2); 
+//	      
+//	      io_buf1.init(_bufs1,       1, t1_size, temp_file_fd1);
+//	      io_buf2.init(_bufs2,       1, t2_size, temp_file_fd2);
 	      
 	      while (TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
 						      jc_in1, TempTuple1, jc_in1, false) == 0)
