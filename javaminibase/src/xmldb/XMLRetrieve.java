@@ -347,7 +347,7 @@ class XMLRetrieve implements GlobalConst {
         expr[0].type1 = new AttrType(AttrType.attrSymbol);
         expr[0].type2 = new AttrType(AttrType.attrSymbol);
         expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
-        expr[0].operand2.symbol = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        expr[0].operand2.symbol = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
         expr[0].flag = 1;
         
 
@@ -417,14 +417,18 @@ class XMLRetrieve implements GlobalConst {
         catch (Exception e) {
             e.printStackTrace();
         }
-        // Sort merge setup starts here
+
         FldSpec [] proj_list = new FldSpec[4];
         proj_list[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
-        proj_list[1] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+        proj_list[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+        proj_list[2] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        proj_list[3] = new FldSpec(new RelSpec(RelSpec.outer), 2);
 
-        AttrType [] jtype = new AttrType[2];
+        AttrType [] jtype = new AttrType[4];
         jtype[0] = new AttrType (AttrType.attrInterval);
-        jtype[1] = new AttrType (AttrType.attrInterval);
+        jtype[1] = new AttrType(AttrType.attrString);
+        jtype[2] = new AttrType (AttrType.attrInterval);
+        jtype[1] = new AttrType(AttrType.attrString);
 //        jtype[0] = new AttrType (AttrType.attrString);
 //        jtype[1] = new AttrType (AttrType.attrString);
 
@@ -441,7 +445,9 @@ class XMLRetrieve implements GlobalConst {
 //                    am, am,
 //                    false, false, ascending,
 //                    expr, proj_list, 4);
-            sm = new SortMerge(Stypes, 2, Ssizes, Stypes, 2, Ssizes, 1, 12,1, 12, 10, iterator1, iterator2, false, false, ascending, expr, proj_list, 2);
+//            sm = new SortMerge(Stypes, 2, Ssizes, Stypes, 2, Ssizes, 1, 12,1, 12, 10, iterator1, iterator2, false, false, ascending, expr, proj_list, 4);
+            sm = new SortMerge(Stypes, 2, Ssizes, Stypes, 2, Ssizes, 1, 12, 1, 12, 10, iterator1, iterator2, false, false, ascending, expr, proj_list, 4);
+
         }
         catch (Exception e) {
             System.err.println("*** join error in NestedLoop constructor ***");
