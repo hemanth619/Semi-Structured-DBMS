@@ -277,12 +277,6 @@ public class SortMerge extends Iterator implements GlobalConst
 			      TempTuple1.tupleCopy(tuple1);
 			      TempTuple2.tupleCopy(tuple2);
 			      
-//			      io_buf1.init(_bufs1, 1, t1_size, temp_file_fd1);
-//			      io_buf2.init(_bufs2, 1, t2_size, temp_file_fd2);
-			      
-//			      if ((_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval) && TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
-//						  jc_in1, tuple2, jc_in2, true) == 1)
-			      
 			      // while this is not a containment and the next one in tuple1 is not null
 			      while (((comp_res != 1) && (tuple1 = p_i1.get_next()) != null) && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
 			    	  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
@@ -295,7 +289,7 @@ public class SortMerge extends Iterator implements GlobalConst
 			    	  io_buf2.Put(TempTuple2);
 			      }
 		    	  
-		    	  while ((comp_res == 1) && (tuple1 = p_i1.get_next()) != null && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
+		    	  while ((comp_res == 1 || comp_res == 9) && (tuple1 = p_i1.get_next()) != null && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
 		    		  io_buf1.Put(tuple1);
 		    		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
 							  jc_in1, tuple2, jc_in2, true);
@@ -313,7 +307,7 @@ public class SortMerge extends Iterator implements GlobalConst
 				    }
 		    	  
 		    	  
-		    	  while ((comp_res == 1) && (tuple2 = p_i2.get_next()) != null && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
+		    	  while ((comp_res == 1 || comp_res == 9) && (tuple2 = p_i2.get_next()) != null && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
 		    		  io_buf2.Put(tuple2);
 		    		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, TempTuple1,
 							  jc_in1, tuple2, jc_in2, true);
@@ -367,9 +361,12 @@ public class SortMerge extends Iterator implements GlobalConst
 			      
 			      if ((comp_res != 1 || comp_res != 9) && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval))
 				{
-			    	  if (comp_res != 1) {
-						  process_next_block = true;
-						  continue;
+			    	  if (comp_res == 1 || comp_res == 9) {
+//						  process_next_block = true;
+//						  continue;
+			    	  } else {
+			    		  process_next_block = true;
+			    		  continue;
 			    	  }
 				}
 			      

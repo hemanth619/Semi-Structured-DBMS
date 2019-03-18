@@ -509,7 +509,7 @@ class XMLRetrieve implements GlobalConst {
     
     public void QP3(){
 
-    	String[] tagNames2 = {"root", "Org"};
+    	String[] tagNames2 = {"root", "Entry"};
     	
     	List<FileScan> fileScanIterators = new ArrayList<FileScan>();
     	
@@ -518,7 +518,7 @@ class XMLRetrieve implements GlobalConst {
     		fileScanIterators.add(this.tagBasedSearchReturnFileScan(tagName));
     	}
     	
-    	this.createCondExprQP3("root", "Org", "AD", fileScanIterators.get(0), fileScanIterators.get(1));
+    	this.createCondExprQP3("root", "Entry", "PC", fileScanIterators.get(0), fileScanIterators.get(1));
     }
     
     
