@@ -656,13 +656,250 @@ class XMLRetrieve implements GlobalConst {
     }
 
 
-    public void anotherQueryPlan(){
+    }
+    
+    public void wrapper() {
+    	// assume this reads the query file, and produces a list of tag names
+    }
+    
+    public void createCondExprQP3(String tagName1, String tagName2, String operand, FileScan iterator1, FileScan iterator2) {
+    	CondExpr[] expr = new CondExpr[2];
+        expr[0] = new CondExpr();
+        expr[1] = null;
+        
+        expr[0].next  = null;
+        
+        switch (operand) {
+        case "AD":
+            expr[0].op    = new AttrOperator(AttrOperator.aopGT);
+        	break;
+        case "PC":
+            expr[0].op    = new AttrOperator(AttrOperator.aopPC);
+        	break;
+        default:
+        	break;
+        }
+        
+        expr[0].type1 = new AttrType(AttrType.attrSymbol);
+        expr[0].type2 = new AttrType(AttrType.attrSymbol);
+        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
+        expr[0].operand2.symbol = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+        expr[0].flag = 1;
+        
 
-        Map<String, Integer> tagIndex = new HashMap<>();
+//        expr[0].next  = null;
+//        expr[0].op    = new AttrOperator(AttrOperator.aopEQ);
+//        expr[0].type1 = new AttrType(AttrType.attrSymbol);
+//        expr[0].type2 = new AttrType(AttrType.attrString);
+//        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),2);
+//        expr[0].operand2.string = "";//new FldSpec (new RelSpec(RelSpec.innerRel),1);
+//        //expr[0].flag = 1;
 
-        int numberOfRules = 2;
-        int numberOfProjections = numberOfRules * 2 + 2;
+//        expr[1].next  = null;
+//        expr[1].op    = new AttrOperator(AttrOperator.aopGT);
+//        expr[1].type1 = new AttrType(AttrType.attrSymbol);
+//        expr[1].type2 = new AttrType(AttrType.attrSymbol);
+//        expr[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
+//        expr[1].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
+//        expr[1].flag = 1;
+//
+//        expr[2] = null;
 
+
+
+        Tuple t = new Tuple();
+
+        AttrType [] Stypes = new AttrType[2];
+        Stypes[0] = new AttrType (AttrType.attrInterval);
+        Stypes[1] = new AttrType (AttrType.attrString);
+
+        //SOS
+        short [] Ssizes = new short[1];
+        Ssizes[0] = 5; //first elt. is 30
+
+        FldSpec [] Sprojection = new FldSpec[2];
+        Sprojection[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        Sprojection[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+        FldSpec [] Rprojection = new FldSpec[2];
+        Rprojection[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        Rprojection[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+
+        CondExpr [] selects = new CondExpr [1];
+        selects = null;
+        boolean status = OK;
+
+
+
+        FileScan am = null;
+        FileScan am2 = null;
+        try {
+//
+
+            am  = new FileScan("test.in", Stypes, Ssizes,
+                    (short)2, (short)2,
+                    Sprojection, null);
+
+            am2 = new FileScan("test.in", Stypes, Ssizes,
+                    (short)2, (short)2,
+                    Rprojection, null);
+
+            boolean done = false;
+//
+
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        FldSpec [] proj_list = new FldSpec[4];
+        proj_list[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        proj_list[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+        proj_list[2] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+        proj_list[3] = new FldSpec(new RelSpec(RelSpec.innerRel), 2);
+
+        AttrType [] jtype = new AttrType[4];
+        jtype[0] = new AttrType (AttrType.attrInterval);
+        jtype[1] = new AttrType(AttrType.attrString);
+        jtype[2] = new AttrType (AttrType.attrInterval);
+        jtype[1] = new AttrType(AttrType.attrString);
+//        jtype[0] = new AttrType (AttrType.attrString);
+//        jtype[1] = new AttrType (AttrType.attrString);
+
+        TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
+//        SortMerge sm = null;
+        SortMerge sm =null;
+
+        try {
+//            sm = new SortMerge(Stypes, 2, Ssizes,
+//                    Stypes, 2, Ssizes,
+//                    2, 5,
+//                    2, 5,
+//                    10,
+//                    am, am,
+//                    false, false, ascending,
+//                    expr, proj_list, 4);
+//            sm = new SortMerge(Stypes, 2, Ssizes, Stypes, 2, Ssizes, 1, 12,1, 12, 10, iterator1, iterator2, false, false, ascending, expr, proj_list, 4);
+            sm = new SortMerge(Stypes, 2, Ssizes, Stypes, 2, Ssizes, 1, 12, 1, 12, 10, iterator1, iterator2, false, false, ascending, expr, proj_list, 4);
+
+        }
+        catch (Exception e) {
+            System.err.println("*** join error in NestedLoop constructor ***");
+            status = FAIL;
+            System.err.println (""+e);
+            e.printStackTrace();
+        }
+        HashSet<String > tupleSet = new HashSet<String>();
+        if (status != OK) {
+            //bail out
+            System.err.println ("*** Error constructing NestedLoop");
+            Runtime.getRuntime().exit(1);
+        }
+
+        int iteasd = 0;
+        boolean done = false;
+        try{
+            while(!done){
+                t = sm.get_next();
+                if(t == null) {
+                    done = true;
+                    break;
+                }
+                iteasd++;
+                byte[] tupleArray = t.getTupleByteArray();
+                IntervalType i = t.getIntervalFld(1);
+                String tagname = t.getStrFld(2);
+//                IntervalType j = t.getIntervalFld(3);
+                IntervalType j = t.getIntervalFld(3);
+                String tagname2 = t.getStrFld(4);
+                XMLRecord rec = new XMLRecord(t);
+                String result = "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2;
+                tupleSet.add(result);
+                // System.out.println( result);
+//                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level);
+
+                
+            }
+            
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        for (String result: tupleSet) {
+        	System.out.println(result);
+        }
+//        for(Tuple tuple: tupleSet) {
+//        	IntervalType i = tuple.getIntervalFld(1);
+//            String tagname = tuple.getStrFld(2);
+////            IntervalType j = t.getIntervalFld(3);
+//            IntervalType j = t.getIntervalFld(3);
+//            String tagname2 = t.getStrFld(4);
+//            XMLRecord rec = new XMLRecord(t);
+//            tupleSet.add(t);
+////            System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
+//        }
+
+        System.out.println("Records  returned by SortMerge: " + iteasd);
+    }
+    
+    public void QP3(){
+
+    	String[] tagNames2 = {"root", "Entry"};
+    	
+    	List<FileScan> fileScanIterators = new ArrayList<FileScan>();
+    	
+    	
+    	for (String tagName: tagNames2) {
+    		fileScanIterators.add(this.tagBasedSearchReturnFileScan(tagName));
+    	}
+    	
+    	this.createCondExprQP3("root", "Entry", "PC", fileScanIterators.get(0), fileScanIterators.get(1));
+    }
+    
+    
+    public FileScan tagBasedSearchReturnFileScan(String tagnname) {
+
+        AttrType[] Stypes = new AttrType[2];
+        Stypes[0] = new AttrType(AttrType.attrInterval);
+        Stypes[1] = new AttrType(AttrType.attrString);
+
+        short[] Ssizes = new short[1];
+        Ssizes[0] = 5;
+
+        FldSpec[] sproj = new FldSpec[2];
+        sproj[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        sproj[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+        FileScan tagSearchScan = null;
+
+        try{
+            CondExpr[] expr = new CondExpr[1];
+            expr[0] = new CondExpr();
+
+            expr[0].op = new AttrOperator(AttrOperator.aopEQ);
+
+            expr[0].type1 = new AttrType(AttrType.attrSymbol);
+            expr[0].type2 = new AttrType(AttrType.attrString);
+
+            expr[0].operand1 = new Operand();
+            expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+
+            expr[0].operand2 = new Operand();
+            expr[0].operand2.string = tagnname;
+
+            tagSearchScan = new FileScan("test.in", Stypes, Ssizes, (short)2, (short)2, sproj, expr);
+
+            return tagSearchScan;
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+
+    public void tagBasedSearch(String tagnname) {
         CondExpr[] expr = new CondExpr[4];
         expr[0] = new CondExpr();
         expr[1] = new CondExpr();
@@ -895,72 +1132,6 @@ class XMLRetrieve implements GlobalConst {
         catch (Exception e) {
             e.printStackTrace();
         }
-
-
-        FldSpec [] proj_list1 = new FldSpec[numberOfProjections];
-        proj_list1[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
-        proj_list1[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
-        proj_list1[2] = new FldSpec(new RelSpec(RelSpec.outer), 3);
-        proj_list1[3] = new FldSpec(new RelSpec(RelSpec.outer), 4);
-        proj_list1[4] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
-        proj_list1[5] = new FldSpec(new RelSpec(RelSpec.innerRel), 2);
-
-
-//        proj_list[4] = new FldSpec(new RelSpec(RelSpec.outer), 1);
-//        proj_list[5] = new FldSpec(new RelSpec(RelSpec.outer), 2);
-
-        tagIndex.put(nextTagName, 3);
-
-
-        NestedLoopsJoins sm2 =null;
-        try {
-//
-            sm2 = new NestedLoopsJoins(Stypes1, 4, Ssizes1, Stypes,2,Ssizes,10,am1,
-                    "test.in",expr1,null,proj_list1, 6 );
-        }
-        catch (Exception e) {
-            System.err.println("*** join error in NestedLoop constructor ***");
-            status = FAIL;
-            System.err.println (""+e);
-            e.printStackTrace();
-        }
-
-
-        if (status != OK) {
-            //bail out
-            System.err.println ("*** Error constructing NestedLoop");
-            Runtime.getRuntime().exit(1);
-        }
-
-        int iteasd = 0;
-        boolean done = false;
-        try{
-            while(!done){
-                t = sm2.get_next();
-                if(t == null){
-                    done = true;
-                    break;
-                }
-                iteasd++;
-                byte[] tupleArray = t.getTupleByteArray();
-                IntervalType i = t.getIntervalFld(1);
-                String tagname = t.getStrFld(2);
-                IntervalType j = t.getIntervalFld(3);
-                String tagname2 = t.getStrFld(4);
-                IntervalType k = t.getIntervalFld(5);
-                String tagname3 = t.getStrFld(6);
-              //  XMLRecord rec = new XMLRecord(t);
-                System.out.print( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + "|   Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
-                System.out.println( "|    Start = " + k.start + " End = " +  k.end + " Level = " + k.level + " Tagname = " + tagname3);
-            }
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-
-        System.out.println("Records  returned by NestedLoop: " + iteasd);
-
-
-
     }
 
 
@@ -969,7 +1140,7 @@ class XMLRetrieve implements GlobalConst {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setValidating(false);
         DocumentBuilder db = dbf.newDocumentBuilder();
-        Document doc = db.parse(new FileInputStream(new File("xmldbTestXML/sample_data.xml")));
+        Document doc = db.parse(new FileInputStream(new File("/home/ronak/DBMSi Project/Phase2/dbmsiPhase2/javaminibase/src/xmldbTestXML/sample_data.xml")));
 
         Node root = doc.getDocumentElement();
 
@@ -985,12 +1156,9 @@ class XMLRetrieve implements GlobalConst {
         // xmlParser.BFSPrint();
 
         XMLRetrieve xmlinsert = new XMLRetrieve();
-       // xmlinsert.createCondExpr();
-        Iterator sm1 = null, sm2 = null;
-        xmlinsert.equalityScan(sm1, sm2);
-        System.out.println("ANOTHER ");
-       xmlinsert.anotherQueryPlan();
-
+        // xmlinsert.createCondExpr();
+//        xmlinsert.tagBasedSearch("*");
+        xmlinsert.QP3();
     }
 }
 

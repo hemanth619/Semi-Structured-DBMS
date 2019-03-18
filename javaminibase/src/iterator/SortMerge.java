@@ -211,182 +211,246 @@ public class SortMerge extends Iterator implements GlobalConst
       // Now, that stuff is setup, all we have to do is a get_next !!!!
     }
   
-  /**
-   *  The tuple is returned
-   * All this function has to do is to get 1 tuple from one of the Iterators
-   * (from both initially), use the sorting order to determine which one
-   * gets sent up. Amit)
-   * Hmmm it seems that some thing more has to be done in order to account
-   * for duplicates.... => I am following Raghu's 564 notes in order to
-   * obtain an algorithm for this merging. Some funda about 
-   *"equivalence classes"
-   *@return the joined tuple is returned
-   *@exception IOException I/O errors
-   *@exception JoinsException some join exception
-   *@exception IndexException exception from super class
-   *@exception InvalidTupleSizeException invalid tuple size
-   *@exception InvalidTypeException tuple type not valid
-   *@exception PageNotReadException exception from lower layer
-   *@exception TupleUtilsException exception from using tuple utilities
-   *@exception PredEvalException exception from PredEval class
-   *@exception SortException sort exception
-   *@exception LowMemException memory error
-   *@exception UnknowAttrType attribute type unknown
-   *@exception UnknownKeyTypeException key type unknown
-   *@exception Exception other exceptions
-   */
-
-  public Tuple get_next() 
-    throws IOException,
-	   JoinsException ,
-	   IndexException,
-	   InvalidTupleSizeException,
-	   InvalidTypeException, 
-	   PageNotReadException,
-	   TupleUtilsException, 
-	   PredEvalException,
-	   SortException,
-	   LowMemException,
-	   UnknowAttrType,
-	   UnknownKeyTypeException,
-	   Exception
-    {
-      
-      int    comp_res;
-      Tuple _tuple1,_tuple2;
-      if (done) return null;
-      
-      while (true)
-	{
-	  if (process_next_block)
-	    {
-	      process_next_block = false;
-	      if (get_from_in1)
-		if ((tuple1 = p_i1.get_next()) == null)
-		  {
-		    done = true;
-		    return null;
-		  }
-	      if (get_from_in2)
-		if ((tuple2 = p_i2.get_next()) == null)
-		  {
-		    done = true;
-		    return null;
-		  }
-	      get_from_in1 = get_from_in2 = false;
-	      
-	      // Note that depending on whether the sort order
-	      // is ascending or descending,
-	      // this loop will be modified.
-	      comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+  	public Tuple get_next() 
+		    throws IOException,
+			   JoinsException ,
+			   IndexException,
+			   InvalidTupleSizeException,
+			   InvalidTypeException, 
+			   PageNotReadException,
+			   TupleUtilsException, 
+			   PredEvalException,
+			   SortException,
+			   LowMemException,
+			   UnknowAttrType,
+			   UnknownKeyTypeException,
+			   Exception {
+		      
+		      int    comp_res;
+		      Tuple _tuple1,_tuple2;
+		      if (done) return null;
+		      
+		      while (true)
+			{
+			  if (process_next_block)
+			    {
+			      process_next_block = false;
+			      if (get_from_in1)
+				if ((tuple1 = p_i1.get_next()) == null)
+				  {
+				    done = true;
+				    return null;
+				  }
+			      if (get_from_in2)
+				if ((tuple2 = p_i2.get_next()) == null)
+				  {
+				    done = true;
+				    return null;
+				  }
+			      get_from_in1 = get_from_in2 = false;
+			      
+			      io_buf1.init(_bufs1, 1, t1_size, temp_file_fd1);
+			      io_buf2.init(_bufs2, 1, t2_size, temp_file_fd2);
+			      
+			      if ((_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
+			    	  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+							  jc_in1, tuple2, jc_in2, true);
+			    	  if (comp_res == 1 || comp_res == 9) {
+				    	  io_buf1.Put(tuple1);
+				    	  io_buf2.Put(tuple2);
+				    	  System.out.println( "Start = " + tuple1.getIntervalFld(1).getStart() + " End = " +  tuple1.getIntervalFld(1).getEnd() + " Level = " + tuple1.getIntervalFld(1).getLevel() +" tagName: " +tuple1.getStrFld(2));
+				    	  System.out.println( "Start = " + tuple2.getIntervalFld(1).getStart() + " End = " +  tuple2.getIntervalFld(1).getEnd() + " Level = " + tuple2.getIntervalFld(1).getLevel() +" tagName: " +tuple2.getStrFld(2));
+			    	  }
+			      } else {
+			    	  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
 							  jc_in1, tuple2, jc_in2, false);
-	      while ((comp_res < 0 && _order.tupleOrder == TupleOrder.Ascending) ||
-		     (comp_res > 0 && _order.tupleOrder == TupleOrder.Descending))
-		{
-		  if ((tuple1 = p_i1.get_next()) == null) {
-		    done = true;
-		    return null;
-		  }
-		  
-		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
-							      jc_in1, tuple2, jc_in2, false);
-		}
-	      
-	      comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
-							  jc_in1, tuple2, jc_in2, false);
-	      while ((comp_res > 0 && _order.tupleOrder == TupleOrder.Ascending) ||
-		     (comp_res < 0 && _order.tupleOrder == TupleOrder.Descending))
-		{
-		  if ((tuple2 = p_i2.get_next()) == null)
-		    {
-		      done = true;
-		      return null;
+			      }
+			      
+			      // Note that depending on whether the sort order
+			      // is ascending or descending,
+			      // this loop will be modified.
+//			      comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+//									  jc_in1, tuple2, jc_in2, false);
+			      
+			      /* change */
+			      
+			      TempTuple1.tupleCopy(tuple1);
+			      TempTuple2.tupleCopy(tuple2);
+			      
+			      // while this is not a containment and the next one in tuple1 is not null
+			      while (((comp_res != 1) && (tuple1 = p_i1.get_next()) != null) && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
+			    	  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+							  jc_in1, TempTuple2, jc_in2, true);
+			    	  continue;
+			      }
+			      
+			      if (tuple1 != null) {
+			    	  io_buf1.Put(tuple1);
+			    	  io_buf2.Put(TempTuple2);
+			      }
+		    	  
+		    	  while ((comp_res == 1 || comp_res == 9) && (tuple1 = p_i1.get_next()) != null && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
+		    		  io_buf1.Put(tuple1);
+		    		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+							  jc_in1, tuple2, jc_in2, true);
+		    		  continue;
+		    	  }
+		    	  
+//				  if ((tuple1=p_i1.get_next()) == null) {
+//				      process_next_block = true;
+//				      continue;
+//				   }
+		    	  if ((tuple1=p_i1.get_next()) == null)
+				    {
+				      get_from_in1       = true;
+//				      break;
+				    }
+		    	  
+		    	  
+		    	  while ((comp_res == 1 || comp_res == 9) && (tuple2 = p_i2.get_next()) != null && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
+		    		  io_buf2.Put(tuple2);
+		    		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, TempTuple1,
+							  jc_in1, tuple2, jc_in2, true);
+		    		  continue;
+		    	  }
+		    	  
+		    	  if ((tuple2=p_i2.get_next()) == null)
+				    {
+				      get_from_in2       = true;
+//				      break;
+				    }
+		    	  
+			      /* change */
+			      
+			      while ((comp_res < 0 && _order.tupleOrder == TupleOrder.Ascending) ||
+				     (comp_res > 0 && _order.tupleOrder == TupleOrder.Descending) && (_in1[0].attrType != AttrType.attrInterval && _in2[0].attrType != AttrType.attrInterval))
+				{
+				  if ((tuple1 = p_i1.get_next()) == null) {
+				    done = true;
+				    return null;
+				  }
+				  
+				  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+									      jc_in1, tuple2, jc_in2, false);
+				}
+			      
+			      if (tuple1 != null && tuple2 != null && (_in1[0].attrType != AttrType.attrInterval && _in2[0].attrType != AttrType.attrInterval)) {
+			    	  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+									  jc_in1, tuple2, jc_in2, false);
+			      }
+			      
+			      
+			      while (((comp_res > 0 && _order.tupleOrder == TupleOrder.Ascending) ||
+				     (comp_res < 0 && _order.tupleOrder == TupleOrder.Descending)) && (_in1[0].attrType != AttrType.attrInterval && _in2[0].attrType != AttrType.attrInterval))
+				{
+				  if ((tuple2 = p_i2.get_next()) == null)
+				    {
+				      done = true;
+				      return null;
+				    }
+				  
+				  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+									      jc_in1, tuple2, jc_in2, false);
+				}
+			      
+			      if (comp_res != 0 && (_in1[0].attrType != AttrType.attrInterval && _in2[0].attrType != AttrType.attrInterval))
+				{
+				  process_next_block = true;
+				  continue;
+				}
+			      
+			      if ((comp_res != 1 || comp_res != 9) && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval))
+				{
+			    	  if (comp_res == 1 || comp_res == 9) {
+//						  process_next_block = true;
+//						  continue;
+			    	  } else {
+			    		  process_next_block = true;
+			    		  continue;
+			    	  }
+				}
+			      
+			      
+//			      
+//			      TempTuple1.tupleCopy(tuple1);
+//			      TempTuple2.tupleCopy(tuple2); 
+//			      
+//			      io_buf1.init(_bufs1,       1, t1_size, temp_file_fd1);
+//			      io_buf2.init(_bufs2,       1, t2_size, temp_file_fd2);
+			      
+			      if ((_in1[0].attrType != AttrType.attrInterval && _in2[0].attrType != AttrType.attrInterval)) {
+			    	  TempTuple1.tupleCopy(tuple1);
+				      TempTuple2.tupleCopy(tuple2); 
+			      }
+			      
+			      while ( (_in1[0].attrType != AttrType.attrInterval && _in2[0].attrType != AttrType.attrInterval) && TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
+								      jc_in1, TempTuple1, jc_in1, false) == 0)
+				{
+				  // Insert tuple1 into io_buf1
+				  try {
+				    io_buf1.Put(tuple1);
+				  }
+				  catch (Exception e){
+				    throw new JoinsException(e,"IoBuf error in sortmerge");
+				  }
+				  if ((tuple1=p_i1.get_next()) == null)
+				    {
+				      get_from_in1       = true;
+				      break;
+				    }
+				}
+			      
+			      while ( (_in1[0].attrType != AttrType.attrInterval && _in2[0].attrType != AttrType.attrInterval) && TupleUtils.CompareTupleWithTuple(sortFldType, tuple2,
+								      jc_in2, TempTuple2, jc_in2, false) == 0)
+				{
+				  // Insert tuple2 into io_buf2
+				  
+				  try {
+				    io_buf2.Put(tuple2);
+				  }
+				  catch (Exception e){
+				    throw new JoinsException(e,"IoBuf error in sortmerge");
+				  }
+				  if ((tuple2=p_i2.get_next()) == null)
+				    {
+				      get_from_in2       = true;
+				      break;
+				    }
+				}
+			      
+			      // tuple1 and tuple2 contain the next tuples to be processed after this set.
+			      // Now perform a join of the tuples in io_buf1 and io_buf2.
+			      // This is going to be a simple nested loops join with no frills. I guess,
+			      // it can be made more efficient, this can be done by a future 564 student.
+			      // Another optimization that can be made is to choose the inner and outer
+			      // by checking the number of tuples in each equivalence class.
+			      
+			      if ((_tuple1=io_buf1.Get(TempTuple1)) == null)                // Should not occur
+				System.out.println( "Equiv. class 1 in sort-merge has no tuples");
+			    }
+			  
+			  if ((_tuple2 = io_buf2.Get(TempTuple2)) == null)
+			    {
+			      if (( _tuple1= io_buf1.Get(TempTuple1)) == null)
+				{
+				  process_next_block = true;
+				  continue;                                // Process next equivalence class
+				}
+			      else
+				{
+				  io_buf2.reread();
+				  _tuple2= io_buf2.Get( TempTuple2);
+				}
+			    }
+			  if (PredEval.Eval(OutputFilter, TempTuple1, TempTuple2, _in1, _in2) == true)
+			    {
+			      Projection.Join(TempTuple1, _in1, 
+					      TempTuple2, _in2, 
+					      Jtuple, perm_mat, nOutFlds);
+			      return Jtuple;
+			    }
+			}
 		    }
-		  
-		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
-							      jc_in1, tuple2, jc_in2, false);
-		}
-	      
-	      if (comp_res != 0)
-		{
-		  process_next_block = true;
-		  continue;
-		}
-	      
-	      TempTuple1.tupleCopy(tuple1);
-	      TempTuple2.tupleCopy(tuple2); 
-	      
-	      io_buf1.init(_bufs1,       1, t1_size, temp_file_fd1);
-	      io_buf2.init(_bufs2,       1, t2_size, temp_file_fd2);
-	      
-	      while (TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
-						      jc_in1, TempTuple1, jc_in1, false) == 0)
-		{
-		  // Insert tuple1 into io_buf1
-		  try {
-		    io_buf1.Put(tuple1);
-		  }
-		  catch (Exception e){
-		    throw new JoinsException(e,"IoBuf error in sortmerge");
-		  }
-		  if ((tuple1=p_i1.get_next()) == null)
-		    {
-		      get_from_in1       = true;
-		      break;
-		    }
-		}
-	      
-	      while (TupleUtils.CompareTupleWithTuple(sortFldType, tuple2,
-						      jc_in2, TempTuple2, jc_in2, false) == 0)
-		{
-		  // Insert tuple2 into io_buf2
-		  
-		  try {
-		    io_buf2.Put(tuple2);
-		  }
-		  catch (Exception e){
-		    throw new JoinsException(e,"IoBuf error in sortmerge");
-		  }
-		  if ((tuple2=p_i2.get_next()) == null)
-		    {
-		      get_from_in2       = true;
-		      break;
-		    }
-		}
-	      
-	      // tuple1 and tuple2 contain the next tuples to be processed after this set.
-	      // Now perform a join of the tuples in io_buf1 and io_buf2.
-	      // This is going to be a simple nested loops join with no frills. I guess,
-	      // it can be made more efficient, this can be done by a future 564 student.
-	      // Another optimization that can be made is to choose the inner and outer
-	      // by checking the number of tuples in each equivalence class.
-	      
-	      if ((_tuple1=io_buf1.Get(TempTuple1)) == null)                // Should not occur
-		System.out.println( "Equiv. class 1 in sort-merge has no tuples");
-	    }
-	  
-	  if ((_tuple2 = io_buf2.Get(TempTuple2)) == null)
-	    {
-	      if (( _tuple1= io_buf1.Get(TempTuple1)) == null)
-		{
-		  process_next_block = true;
-		  continue;                                // Process next equivalence class
-		}
-	      else
-		{
-		  io_buf2.reread();
-		  _tuple2= io_buf2.Get( TempTuple2);
-		}
-	    }
-	  if (PredEval.Eval(OutputFilter, TempTuple1, TempTuple2, _in1, _in2) == true)
-	    {
-	      Projection.Join(TempTuple1, _in1, 
-			      TempTuple2, _in2, 
-			      Jtuple, perm_mat, nOutFlds);
-	      return Jtuple;
-	    }
-	}
-    }
 
   /** 
    *implement the abstract method close() from super class Iterator
