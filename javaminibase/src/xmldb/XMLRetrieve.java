@@ -43,6 +43,18 @@ class XMLRetrieve implements GlobalConst {
     private boolean FAIL = false;
     private Vector xmlTuples;
     static XMLParser xmlParser = new XMLParser();
+    HashMap<String, Integer> tagIndex = new HashMap<>();
+    static HashSet<String> globalResults = new HashSet<>();
+    
+    private static int colLength = 0;
+    
+	ArrayList<ArrayList<String>> sortedRules;
+    
+	static int currentTagIndex = 1; // Used in the hashmap
+    static int currentProjCount = 6;
+    static int currentInstanceIndex = 1;
+    
+    ArrayList<SortMerge> sortMergeInstanceList = new ArrayList<>();
 
     /** Constructor
      */
@@ -314,7 +326,7 @@ class XMLRetrieve implements GlobalConst {
                 IntervalType j = t.getIntervalFld(3);
                 String tagname2 = t.getStrFld(4);
                 XMLRecord rec = new XMLRecord(t);
-                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
+                // System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
 
             }
         } catch(Exception e){
@@ -477,7 +489,7 @@ class XMLRetrieve implements GlobalConst {
                 IntervalType j1 = t.getIntervalFld(3);
                 String tagname21 = t.getStrFld(4);
                 XMLRecord rec1 = new XMLRecord(t);
-                System.out.println( "Start = " + i1.start + " End = " +  i1.end + " Level = " + i1.level + " Tagname = " + tagname1 + " Start = " + j1.start + " End = " +  j1.end + " Level = " + j1.level + " Tagname = " + tagname21);
+                // System.out.println( "Start = " + i1.start + " End = " +  i1.end + " Level = " + i1.level + " Tagname = " + tagname1 + " Start = " + j1.start + " End = " +  j1.end + " Level = " + j1.level + " Tagname = " + tagname21);
 
             }
         } catch(Exception e){
@@ -645,7 +657,7 @@ class XMLRetrieve implements GlobalConst {
                 IntervalType j = t.getIntervalFld(3);
                 String tagname2 = t.getStrFld(4);
                 XMLRecord rec = new XMLRecord(t);
-                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
+                // System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
 
             }
         } catch(Exception e){
@@ -654,15 +666,362 @@ class XMLRetrieve implements GlobalConst {
 
         System.out.println("Records  returned by NestedLoop: " + iteasd);
     }
+    
+    public static void print(Iterator it) {
+    	boolean done = false;
+        Tuple t = null;
+        HashSet<String> tupleSet = new HashSet<>();
+        try{
+            while(!done){
+                t = it.get_next();
+                if(t == null) {
+                    done = true;
+                    break;
+                }
+                byte[] tupleArray = t.getTupleByteArray();
+                IntervalType i = t.getIntervalFld(1);
+                IntervalType i2 = t.getIntervalFld(3);
+                IntervalType i3 = t.getIntervalFld(5);
+
+                String tagname = t.getStrFld(2);
+                String tagname2 = t.getStrFld(4);
+                String tagname3 = t.getStrFld(6);
+
+                String result = "***Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname;
+                result += " Start = " + i2.start + " End = " +  i2.end + " Level = " + i2.level + " Tagname = " + tagname2;
+                result += " Start = " + i3.start + " End = " +  i3.end + " Level = " + i3.level + " Tagname = " + tagname3;
+                
+                globalResults.add(result);                    
+            }
+            System.out.println(globalResults);
+            System.out.println(globalResults.size());
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public static ArrayList<ArrayList<String>> getSortedRules(ArrayList<String> tags, ArrayList<ArrayList<String>> rules){
+        ArrayList<Integer> isRuleVisited = new ArrayList<>();
+        ArrayList<Integer> isTagVisited = new ArrayList<>();
+        ArrayList<ArrayList<String>> sortedRules = new ArrayList<ArrayList<String>>();
+        Queue<String> q = new LinkedList<>();
+
+        //Mark all rules as unvisited first
+        for(int i=0; i<rules.size(); i++){
+            isRuleVisited.add(0);
+        }
+        // isRuleVisited.set(0,1);
+        for(int i=0; i<tags.size(); i++){
+            isTagVisited.add(0);
+        }
+
+        ((LinkedList<String>) q).add(rules.get(0).get(0));
+        ((LinkedList<String>) q).add(rules.get(0).get(1));
+        isTagVisited.set(tags.indexOf(rules.get(0).get(0)), 1);
+        // isTagVisited.set(tags.indexOf(rules.get(0).get(1)), 1);
 
 
-    
-    
-    public void wrapper() {
-    	// assume this reads the query file, and produces a list of tag names
+        while(q.size() != 0){
+            String tag = q.remove();
+            isTagVisited.set(tags.indexOf(tag),1);
+            for(int i = 0; i< rules.size(); i++){
+                if(isRuleVisited.get(i) == 0){
+
+                    if(rules.get(i).get(0).equals(tag)){
+                        isRuleVisited.set(i, 1);
+                        sortedRules.add(rules.get(i));
+                        if(isTagVisited.get(tags.indexOf(tag)) == 0){
+                            q.add(tag);
+
+                        }
+                        if(isTagVisited.get(tags.indexOf(rules.get(i).get(1))) == 0){
+                            q.add(rules.get(i).get(1));
+                        }
+
+                    }
+                    if(rules.get(i).get(1).equals(tag)){
+                        isRuleVisited.set(i, 1);
+                        sortedRules.add(rules.get(i));
+                        if(isTagVisited.get(tags.indexOf(tag)) == 0){
+                            q.add(tag);
+                        }
+                        if(isTagVisited.get(tags.indexOf(rules.get(i).get(0))) == 0){
+                            q.add(rules.get(i).get(0));
+                        }
+
+                    }
+                }
+            }
+        }
+
+
+
+        return sortedRules;
     }
     
-    public void createCondExprQP3(String tagName1, String tagName2, String operand, FileScan iterator1, FileScan iterator2) {
+    public ArrayList<ArrayList<String>> wrapperForSortedRules() {
+    	// assume this reads the query file, and produces a list of tag names
+    	try{
+            File file = new File("/home/ronak/DBMSi Project/Phase2/dbmsiPhase2/javaminibase/src/xmldbTestXML/XMLQueryInput2.txt");
+            Scanner scan =new Scanner(file);
+
+            ArrayList<String> tags = new ArrayList<>();
+            ArrayList<ArrayList<String>> rules = new ArrayList<ArrayList<String>>();
+
+
+            //Scan numberoftags, tags and rules from file
+            int numberOfTags = scan.nextInt();
+            for(int i=0; i<numberOfTags; i++){
+                String tag = scan.next();
+                if(tag.length() > 5)
+                    tag = tag.substring(0,5);
+                tags.add(tag);
+                //  System.out.println(tags.get(i));
+            }
+            int j = 0;
+            while(scan.hasNext()){
+                ArrayList<String> temp = new ArrayList<>();
+                int leftTag = scan.nextInt();
+                int rightTag = scan.nextInt();
+                String relation = scan.next();
+                //System.out.println(leftTag + " " + rightTag + " " + relation);
+                temp.add(tags.get(leftTag-1));
+                temp.add(tags.get(rightTag-1));
+                temp.add(relation);
+                //   System.out.println(temp.get(0) + " " + temp.get(1) + " " + temp.get(2));
+                rules.add(temp);
+
+            }
+            ArrayList<String> reversedtags = new ArrayList<>();
+            for(int i= tags.size()-1; i >=0; i--){
+                reversedtags.add(tags.get(i));
+            }
+
+            ArrayList<ArrayList<String>> reversedRules = new ArrayList<ArrayList<String>>();
+            for(int i = rules.size()-1; i >= 0; i--) {
+                reversedRules.add(rules.get(i));
+            }
+
+            sortedRules = XMLQueryParsing.getSortedRules(tags, rules);
+            return sortedRules;
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	}
+    	return new ArrayList<ArrayList<String>>();
+    }
+    
+    public void combine() {
+    	ArrayList<SortMerge> instances = sortMergeInstanceList;
+    	SortMerge sm1, sm2;
+    	
+    	int joinColumnIndex = 1; // incremented each time a new "tag" is added, because a tag will bring 2 columns
+    	
+        boolean status = OK;
+    	
+    	CondExpr[] expr = new CondExpr[2];
+    	expr[0] = new CondExpr();
+        expr[1] = null;
+        expr[0].next  = null;
+
+        expr[0].op    = new AttrOperator(AttrOperator.aopEQ);
+        
+        expr[0].type1 = new AttrType(AttrType.attrSymbol);
+        expr[0].type2 = new AttrType(AttrType.attrSymbol);
+        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
+        expr[0].operand2.symbol = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+        expr[0].flag = 1;
+        
+        AttrType [] Stypes = new AttrType[4];
+        Stypes[0] = new AttrType (AttrType.attrInterval);
+        Stypes[1] = new AttrType (AttrType.attrString);
+        Stypes[2] = new AttrType (AttrType.attrInterval);
+        Stypes[3] = new AttrType (AttrType.attrString);
+        
+        short [] Ssizes = new short[2];
+        Ssizes[0] = 5;
+        Ssizes[1] = 5;
+        
+
+//        AttrType [] Stypes2 = new AttrType[2];
+//        Stypes2[0] = new AttrType (AttrType.attrInterval);
+//        Stypes2[1] = new AttrType (AttrType.attrString);
+
+        FldSpec [] projectionList = new FldSpec[6];
+        projectionList[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        projectionList[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+        projectionList[2] = new FldSpec(new RelSpec(RelSpec.outer), 3);
+        projectionList[3] = new FldSpec(new RelSpec(RelSpec.outer), 4);
+        projectionList[4] = new FldSpec(new RelSpec(RelSpec.innerRel), 3);
+        projectionList[5] = new FldSpec(new RelSpec(RelSpec.innerRel), 4);
+        
+        
+        
+        TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
+        SortMerge2 tempInstance =null;
+        
+        if (!tagIndex.containsKey(sortedRules.get(0).get(0))) {
+        	tagIndex.put(sortedRules.get(0).get(0), currentTagIndex);
+        	 currentTagIndex+= 2;
+        }
+        
+        if (!tagIndex.containsKey(sortedRules.get(0).get(1))) {
+        	tagIndex.put(sortedRules.get(0).get(1), currentTagIndex);
+        	currentTagIndex+= 2;
+        }
+        
+        joinColumnIndex = tagIndex.get(sortedRules.get(currentInstanceIndex).get(0));
+        
+        if (!tagIndex.containsKey(sortedRules.get(currentInstanceIndex).get(1))) {
+        	tagIndex.put(sortedRules.get(currentInstanceIndex).get(1), currentTagIndex);
+        	currentTagIndex+= 2;
+        }
+        
+        sm1 = sortMergeInstanceList.get(0);
+        sm2 = sortMergeInstanceList.get(currentInstanceIndex);        
+        
+        try {
+            tempInstance = new SortMerge2(Stypes, 4, Ssizes, Stypes, 4, Ssizes, joinColumnIndex, 12, 1, 12, 10, sm1, sm2, false, false, ascending, expr, projectionList, 6);
+        }
+        catch (Exception e) {
+            System.err.println("*** join error in SortMerge constructor ***");
+            status = FAIL;
+            System.err.println (""+e);
+            e.printStackTrace();
+        }
+        
+        
+    	currentInstanceIndex++;
+    	CondExpr[] condExpr;
+    	SortMerge2 sortMerge2Instance;
+    	
+    	int columnCount, tempVal;
+    	boolean flag = false;
+    	AttrType[] Stypes2;
+    	
+
+    	SortMerge2 tempInstance2 = null;
+    	for (int index = currentInstanceIndex; index < sortMergeInstanceList.size(); index++) {
+//    		sortMerge2Instance = tempInstance;
+//    		sm2 = sortMergeInstanceList.get(index);
+            
+            Stypes2 = new AttrType[4];
+            Stypes2[0] = new AttrType (AttrType.attrInterval);
+            Stypes2[1] = new AttrType (AttrType.attrString);
+            Stypes2[2] = new AttrType (AttrType.attrInterval);
+            Stypes2[3] = new AttrType (AttrType.attrString);
+            
+            AttrType[] Stypes1 = new AttrType[tagIndex.size()*2];
+            for (int currentColumn = 0; currentColumn < tagIndex.size()*2; currentColumn++) {
+            	if (currentColumn%2 == 0) {
+            		Stypes1[currentColumn] = new AttrType(AttrType.attrInterval);
+            	} else {
+            		Stypes1[currentColumn] = new AttrType(AttrType.attrString);
+            	}
+            }
+            
+            short[] Ssizes1 = new short[tagIndex.size()];
+            for (int i=0; i<tagIndex.size(); i++) {
+            	Ssizes1[i] = 5;
+            }
+            
+            short [] Ssizes2 = new short[2];
+            Ssizes2[0] = 5;
+            Ssizes2[1] = 5;
+            
+            
+          joinColumnIndex = tagIndex.get(sortedRules.get(index).get(0));
+            
+            if (!tagIndex.containsKey(sortedRules.get(index).get(1))) {
+            	tagIndex.put(sortedRules.get(index).get(1), currentTagIndex);
+            	currentTagIndex+= 2;
+            	currentProjCount+= 2;
+            	flag = true;
+            }
+            
+            tempVal = flag ? currentProjCount : currentProjCount-2;
+            FldSpec [] projectionList2 = new FldSpec[tempVal];
+            
+            colLength = tempVal;
+            for (int i=0; i<tempVal; i++) {
+            	projectionList2[i] = new FldSpec(new RelSpec(RelSpec.outer), i+1);
+            }
+            
+            if (flag) {
+                projectionList2[tempVal-2] = new FldSpec(new RelSpec(RelSpec.innerRel), 3);
+                projectionList2[tempVal-1] = new FldSpec(new RelSpec(RelSpec.innerRel), 4);
+            }           
+            
+            // TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
+            
+            tempInstance2 = tempInstance;
+            sm2 = sortMergeInstanceList.get(index);        
+            System.out.println("Column length: " + projectionList2.length);
+            try {
+                tempInstance = new SortMerge2(Stypes1, Stypes1.length, Ssizes1, Stypes2, Stypes2.length, Ssizes2, joinColumnIndex, 12, 1, 12, 10, tempInstance2, sm2, false, false, ascending, expr, projectionList2, tempVal);
+            }
+            catch (Exception e) {
+                System.err.println("*** join error in SortMerge constructor ***");
+                status = FAIL;
+                System.err.println (""+e);
+                e.printStackTrace();
+            }
+    		
+        	flag = false;
+    	}
+    	
+    	boolean done = false;
+        Tuple t = null;
+        HashSet<String> tupleSet = new HashSet<>();
+        try{
+            while(!done){
+                t = tempInstance.get_next();
+                if(t == null) {
+                    done = true;
+                    break;
+                }
+//                byte[] tupleArray = t.getTupleByteArray();
+//                IntervalType i = t.getIntervalFld(1);
+//                IntervalType i2 = t.getIntervalFld(3);
+//                IntervalType i3 = t.getIntervalFld(5);
+//                IntervalType i4 = t.getIntervalFld(7);
+//                IntervalType i5 = t.getIntervalFld(9);
+//
+//                String tagname = t.getStrFld(2);
+//                String tagname2 = t.getStrFld(4);
+//                String tagname3 = t.getStrFld(6);
+//                String tagname4 = t.getStrFld(8);
+//                String tagname5 = t.getStrFld(10);
+//
+//                String result = "***Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname;
+//                result += " Start = " + i2.start + " End = " +  i2.end + " Level = " + i2.level + " Tagname = " + tagname2;
+//                result += " Start = " + i3.start + " End = " +  i3.end + " Level = " + i3.level + " Tagname = " + tagname3;
+//                result += " Start = " + i4.start + " End = " +  i4.end + " Level = " + i4.level + " Tagname = " + tagname4;
+//                result += " Start = " + i5.start + " End = " +  i5.end + " Level = " + i5.level + " Tagname = " + tagname5;
+//                
+               
+                for (int k=1; k<=colLength; k++) {
+                	if(k%2 != 0)
+                        System.out.print(" | Start = " + t.getIntervalFld(k).getStart() + " End = " + t.getIntervalFld(k).getEnd() + " Level = " + t.getIntervalFld(k).getLevel());
+                       else
+                           System.out.print(" TagName = " + t.getStrFld(k) );
+                	}
+                System.out.println("Total records: " + colLength);
+            }
+            
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+    
+    public void wrapper() {
+    	ArrayList<ArrayList<String>> sortedRules = this.wrapperForSortedRules();
+    	
+    	for(int i=0; i<sortedRules.size(); i++){
+    		this.QP3(sortedRules.get(i).get(0), sortedRules.get(i).get(1), sortedRules.get(i).get(2));
+        }
+    }
+    
+    public SortMerge createCondExprQP3(String tagName1, String tagName2, String operand, FileScan iterator1, FileScan iterator2) {
     	CondExpr[] expr = new CondExpr[2];
         expr[0] = new CondExpr();
         expr[1] = null;
@@ -686,27 +1045,6 @@ class XMLRetrieve implements GlobalConst {
         expr[0].operand2.symbol = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
         expr[0].flag = 1;
         
-
-//        expr[0].next  = null;
-//        expr[0].op    = new AttrOperator(AttrOperator.aopEQ);
-//        expr[0].type1 = new AttrType(AttrType.attrSymbol);
-//        expr[0].type2 = new AttrType(AttrType.attrString);
-//        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),2);
-//        expr[0].operand2.string = "";//new FldSpec (new RelSpec(RelSpec.innerRel),1);
-//        //expr[0].flag = 1;
-
-//        expr[1].next  = null;
-//        expr[1].op    = new AttrOperator(AttrOperator.aopGT);
-//        expr[1].type1 = new AttrType(AttrType.attrSymbol);
-//        expr[1].type2 = new AttrType(AttrType.attrSymbol);
-//        expr[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
-//        expr[1].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
-//        expr[1].flag = 1;
-//
-//        expr[2] = null;
-
-
-
         Tuple t = new Tuple();
 
         AttrType [] Stypes = new AttrType[2];
@@ -764,29 +1102,17 @@ class XMLRetrieve implements GlobalConst {
         jtype[0] = new AttrType (AttrType.attrInterval);
         jtype[1] = new AttrType(AttrType.attrString);
         jtype[2] = new AttrType (AttrType.attrInterval);
-        jtype[1] = new AttrType(AttrType.attrString);
-//        jtype[0] = new AttrType (AttrType.attrString);
-//        jtype[1] = new AttrType (AttrType.attrString);
+        jtype[3] = new AttrType(AttrType.attrString);
 
         TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
-//        SortMerge sm = null;
         SortMerge sm =null;
 
         try {
-//            sm = new SortMerge(Stypes, 2, Ssizes,
-//                    Stypes, 2, Ssizes,
-//                    2, 5,
-//                    2, 5,
-//                    10,
-//                    am, am,
-//                    false, false, ascending,
-//                    expr, proj_list, 4);
-//            sm = new SortMerge(Stypes, 2, Ssizes, Stypes, 2, Ssizes, 1, 12,1, 12, 10, iterator1, iterator2, false, false, ascending, expr, proj_list, 4);
             sm = new SortMerge(Stypes, 2, Ssizes, Stypes, 2, Ssizes, 1, 12, 1, 12, 10, iterator1, iterator2, false, false, ascending, expr, proj_list, 4);
 
         }
         catch (Exception e) {
-            System.err.println("*** join error in NestedLoop constructor ***");
+            System.err.println("*** join error in SortMerge constructor ***");
             status = FAIL;
             System.err.println (""+e);
             e.printStackTrace();
@@ -794,58 +1120,61 @@ class XMLRetrieve implements GlobalConst {
         HashSet<String > tupleSet = new HashSet<String>();
         if (status != OK) {
             //bail out
-            System.err.println ("*** Error constructing NestedLoop");
+            System.err.println ("*** Error constructing SortMerge");
             Runtime.getRuntime().exit(1);
         }
 
         int iteasd = 0;
         boolean done = false;
-        try{
-            while(!done){
-                t = sm.get_next();
-                if(t == null) {
-                    done = true;
-                    break;
-                }
-                iteasd++;
-                byte[] tupleArray = t.getTupleByteArray();
-                IntervalType i = t.getIntervalFld(1);
-                String tagname = t.getStrFld(2);
+//        try{
+//            while(!done){
+//                t = sm.get_next();
+//                if(t == null) {
+//                    done = true;
+//                    break;
+//                }
+//                iteasd++;
+//                byte[] tupleArray = t.getTupleByteArray();
+//                IntervalType i = t.getIntervalFld(1);
+//                String tagname = t.getStrFld(2);
+////                IntervalType j = t.getIntervalFld(3);
 //                IntervalType j = t.getIntervalFld(3);
-                IntervalType j = t.getIntervalFld(3);
-                String tagname2 = t.getStrFld(4);
-                XMLRecord rec = new XMLRecord(t);
-                String result = "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2;
-                tupleSet.add(result);
-                // System.out.println( result);
-//                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level);
-
-                
-            }
-            
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-        for (String result: tupleSet) {
-        	System.out.println(result);
-        }
-//        for(Tuple tuple: tupleSet) {
-//        	IntervalType i = tuple.getIntervalFld(1);
-//            String tagname = tuple.getStrFld(2);
-////            IntervalType j = t.getIntervalFld(3);
-//            IntervalType j = t.getIntervalFld(3);
-//            String tagname2 = t.getStrFld(4);
-//            XMLRecord rec = new XMLRecord(t);
-//            tupleSet.add(t);
-////            System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
+//                String tagname2 = t.getStrFld(4);
+//                XMLRecord rec = new XMLRecord(t);
+//                String result = "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2;
+//                tupleSet.add(result);
+//                // System.out.println( result);
+////                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level);
+//
+//                
+//            }
+//            
+//        } catch(Exception e){
+//            e.printStackTrace();
 //        }
+//        for (String result: tupleSet) {
+//        	// System.out.println(result);
+//        }
+////        for(Tuple tuple: tupleSet) {
+////        	IntervalType i = tuple.getIntervalFld(1);
+////            String tagname = tuple.getStrFld(2);
+//////            IntervalType j = t.getIntervalFld(3);
+////            IntervalType j = t.getIntervalFld(3);
+////            String tagname2 = t.getStrFld(4);
+////            XMLRecord rec = new XMLRecord(t);
+////            tupleSet.add(t);
+//////            System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
+////        }
 
-        System.out.println("Records  returned by SortMerge: " + iteasd);
+        // System.out.println("Records  returned by SortMerge: " + tupleSet.size());
+        
+        return sm;
     }
     
-    public void QP3(){
+    // another wrapper calls this for every rule
+    public void QP3(String tagName1, String tagName2, String constraint) {
 
-    	String[] tagNames2 = {"root", "Entry"};
+    	String[] tagNames2 = {tagName1, tagName2};
     	
     	List<FileScan> fileScanIterators = new ArrayList<FileScan>();
     	
@@ -854,7 +1183,9 @@ class XMLRetrieve implements GlobalConst {
     		fileScanIterators.add(this.tagBasedSearchReturnFileScan(tagName));
     	}
     	
-    	this.createCondExprQP3("root", "Entry", "PC", fileScanIterators.get(0), fileScanIterators.get(1));
+    	SortMerge sortMergeInstance = this.createCondExprQP3(tagName1, tagName2, constraint, fileScanIterators.get(0), fileScanIterators.get(1));
+    	
+    	sortMergeInstanceList.add(sortMergeInstance);
     }
     
     
@@ -1044,7 +1375,7 @@ class XMLRetrieve implements GlobalConst {
 //                IntervalType k = t.getIntervalFld(5);
 //                String tagname3 = t.getStrFld(6);
                 //  XMLRecord rec = new XMLRecord(t);
-                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + "|   Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
+                // System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + "|   Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
                // System.out.println( "|    Start = " + k.start + " End = " +  k.end + " Level = " + k.level + " Tagname = " + tagname3);
             }
         } catch(Exception e){
@@ -1141,7 +1472,7 @@ class XMLRetrieve implements GlobalConst {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setValidating(false);
         DocumentBuilder db = dbf.newDocumentBuilder();
-        Document doc = db.parse(new FileInputStream(new File("/home/ronak/DBMSi Project/Phase2/dbmsiPhase2/javaminibase/src/xmldbTestXML/sample_data.xml")));
+        Document doc = db.parse(new FileInputStream(new File("/home/ronak/DBMSi Project/Phase2/dbmsiPhase2/javaminibase/src/xmldbTestXML/something.xml")));
 
         Node root = doc.getDocumentElement();
 
@@ -1156,10 +1487,16 @@ class XMLRetrieve implements GlobalConst {
 
         // xmlParser.BFSPrint();
 
-        XMLRetrieve xmlinsert = new XMLRetrieve();
-        // xmlinsert.createCondExpr();
-//        xmlinsert.tagBasedSearch("*");
-        xmlinsert.QP3();
+        XMLRetrieve instance = new XMLRetrieve();
+        instance.wrapper();
+        if (instance.sortMergeInstanceList.size() > 1)
+        	instance.combine();
+        
+//        for (String result: globalResults) {
+//        	System.out.println(result);
+//        }
+
+//       System.out.println("Records returned: " + globalResults.size());
     }
 }
 

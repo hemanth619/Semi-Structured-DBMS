@@ -15,7 +15,7 @@ import java.io.*;
  * sorting utility to generate runs, and then uses the iterator interface to
  * get successive tuples for the final merge.
  */
-public class SortMerge extends Iterator implements GlobalConst
+public class SortMerge2 extends Iterator implements GlobalConst
 {
   private AttrType  _in1[], _in2[];
   private  int        in1_len, in2_len;
@@ -68,7 +68,7 @@ public class SortMerge extends Iterator implements GlobalConst
 	 *@exception TupleUtilsException exception from using tuple utils
    *@exception IOException some I/O fault
    */
-  public SortMerge(AttrType    in1[],               
+  public SortMerge2(AttrType    in1[],               
 		   int     len_in1,                        
 		   short   s1_sizes[],
 		   AttrType    in2[],                
@@ -255,10 +255,10 @@ public class SortMerge extends Iterator implements GlobalConst
 			      if ((_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
 			    	  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
 							  jc_in1, tuple2, jc_in2, true);
-			    	  if (comp_res == 1 || comp_res == 9) {
+			    	  if (comp_res == 4) {
 				    	  io_buf1.Put(tuple1);
 				    	  io_buf2.Put(tuple2);
-				    	 // System.out.println( "Start = " + tuple1.getIntervalFld(1).getStart() + " End = " +  tuple1.getIntervalFld(1).getEnd() + " Level = " + tuple1.getIntervalFld(1).getLevel() +" tagName: " +tuple1.getStrFld(2));
+				    	  // System.out.println( "Start = " + tuple1.getIntervalFld(1).getStart() + " End = " +  tuple1.getIntervalFld(1).getEnd() + " Level = " + tuple1.getIntervalFld(1).getLevel() +" tagName: " +tuple1.getStrFld(2));
 				    	  // System.out.println( "Start = " + tuple2.getIntervalFld(1).getStart() + " End = " +  tuple2.getIntervalFld(1).getEnd() + " Level = " + tuple2.getIntervalFld(1).getLevel() +" tagName: " +tuple2.getStrFld(2));
 			    	  }
 			      } else {
@@ -278,7 +278,7 @@ public class SortMerge extends Iterator implements GlobalConst
 			      TempTuple2.tupleCopy(tuple2);
 			      
 			      // while this is not a containment and the next one in tuple1 is not null
-			      while (((comp_res != 1) && (tuple1 = p_i1.get_next()) != null) && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
+			      while (((comp_res != 4) && (tuple1 = p_i1.get_next()) != null) && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
 			    	  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
 							  jc_in1, TempTuple2, jc_in2, true);
 			    	  continue;
@@ -289,7 +289,7 @@ public class SortMerge extends Iterator implements GlobalConst
 			    	  io_buf2.Put(TempTuple2);
 			      }
 		    	  
-		    	  while ((comp_res == 1 || comp_res == 9) && (tuple1 = p_i1.get_next()) != null && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
+		    	  while ((comp_res == 4) && (tuple1 = p_i1.get_next()) != null && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
 		    		  io_buf1.Put(tuple1);
 		    		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, tuple1,
 							  jc_in1, tuple2, jc_in2, true);
@@ -307,7 +307,7 @@ public class SortMerge extends Iterator implements GlobalConst
 				    }
 		    	  
 		    	  
-		    	  while ((comp_res == 1 || comp_res == 9) && (tuple2 = p_i2.get_next()) != null && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
+		    	  while ((comp_res == 4) && (tuple2 = p_i2.get_next()) != null && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval)) {
 		    		  io_buf2.Put(tuple2);
 		    		  comp_res = TupleUtils.CompareTupleWithTuple(sortFldType, TempTuple1,
 							  jc_in1, tuple2, jc_in2, true);
@@ -359,15 +359,17 @@ public class SortMerge extends Iterator implements GlobalConst
 				  continue;
 				}
 			      
-			      if ((comp_res != 1 || comp_res != 9) && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval))
+			      if ((comp_res != 4) && (_in1[0].attrType == AttrType.attrInterval || _in2[0].attrType == AttrType.attrInterval))
 				{
-			    	  if (comp_res == 1 || comp_res == 9) {
-//						  process_next_block = true;
-//						  continue;
-			    	  } else {
-			    		  process_next_block = true;
-			    		  continue;
-			    	  }
+//			    	  if (comp_res == 1 || comp_res == 9) {
+////						  process_next_block = true;
+////						  continue;
+//			    	  } else {
+//			    		  process_next_block = true;
+//			    		  continue;
+//			    	  }
+		    		  process_next_block = true;
+		    		  continue;
 				}
 			      
 			      
@@ -495,5 +497,3 @@ public class SortMerge extends Iterator implements GlobalConst
     }
   
 }
-
-
