@@ -817,8 +817,8 @@ public class BufMgr implements GlobalConst{
     
     try {
       SystemDefs.JavabaseDB.write_page(pageno, page);
-      //pc.increment();
-    }
+      PCounter.writeIncrement();
+     }
     catch (Exception e) {
       throw new BufMgrException(e,"BufMgr.java: write_page() failed");
     }
@@ -830,7 +830,7 @@ public class BufMgr implements GlobalConst{
     
     try {
       SystemDefs.JavabaseDB.read_page(pageno, page);
-      //pc.increment();
+      PCounter.readIncrement();
     }
     catch (Exception e) {
       throw new BufMgrException(e,"BufMgr.java: read_page() failed");

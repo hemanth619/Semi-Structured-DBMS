@@ -9,9 +9,8 @@ public class IntervalType {
 	public int end;
 	public int level; // -1 is an invalid value, levels start from 0.
 
-	//	boolean isValid;
 	
-	//Default Contructor
+	//Default Constructor
 	public IntervalType() {
 		this.start = -1;
 		this.end = -1;
@@ -26,12 +25,11 @@ public class IntervalType {
 			this.start = start;
 			this.end = end;
 			this.level = level;
-//			this.isValid = true;
 		} catch (Exception e) {
 			this.start = 0;
 			this.end = 0;
 			this.level = -1;
-//			this.isValid = false;
+
 		}
 	}
   
