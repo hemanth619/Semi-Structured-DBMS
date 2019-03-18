@@ -45,7 +45,8 @@ public class PredEval
 		boolean   op_res = false, row_res = false, col_res = true;
 		Tuple t = new Tuple();
 
-		if (in2 != null && in2[0].attrType == AttrType.attrString && (p == null || p[0].operand2.string.equals("*")))
+		// if (in2 != null && in2[0].attrType == AttrType.attrString && (p == null || p[0].operand2.string.equals("*")))
+    if (in2 != null && in2[0].attrType == AttrType.attrString && (p == null))
 		{
 			return true;
 		}
@@ -124,10 +125,13 @@ public class PredEval
 							break;
 						case AttrType.attrSymbol:
 							fld2 = temp_ptr.operand2.symbol.offset;
-							if (temp_ptr.operand2.symbol.relation.key == RelSpec.outer)
+							if (temp_ptr.operand2.symbol.relation.key == RelSpec.outer) {
 								tuple2 = t1;
-							else
+							//	System.out.println("Symbol =" + t1.getStrFld(2));
+							}else {
+							//	System.out.println("Symbol =" + t1.getStrFld(2));
 								tuple2 = t2;
+							}
 							break;
 						case AttrType.attrInterval:
 //						  str_size[0] = (short) 5;
@@ -166,7 +170,8 @@ public class PredEval
 										op_res = false;
 								}
 								else if(temp_ptr.type1.attrType==AttrType.attrSymbol){
-									if (comp_res == 0) op_res = true;
+									if (comp_res == 0)
+										op_res = true;
 								}
 								else{
 									if (comp_res == 4) {

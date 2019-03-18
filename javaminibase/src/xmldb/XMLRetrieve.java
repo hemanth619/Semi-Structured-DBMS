@@ -8,6 +8,8 @@ import global.*;
 import java.io.*;
 import java.util.*;
 import java.lang.*;
+
+import iterator.Iterator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
@@ -161,11 +163,12 @@ class XMLRetrieve implements GlobalConst {
 
     public void createCondExpr(){
 
-        CondExpr[] expr = new CondExpr[3];
+        CondExpr[] expr = new CondExpr[4];
         expr[0] = new CondExpr();
         expr[1] = new CondExpr();
         expr[2] = new CondExpr();
-        String tagName= "Test";
+        expr[3] = new CondExpr();
+        String tagName= "PFAM";
 
 
         // Working code for AD!!!!!!!!!!!!!!---------------------------------------
@@ -178,33 +181,34 @@ class XMLRetrieve implements GlobalConst {
 //        expr[0].flag = 1;
 //        expr[1] = null;
 
-//        expr[0].next  = null;
-//        expr[0].op    = new AttrOperator(AttrOperator.aopPC);
-//        expr[0].type1 = new AttrType(AttrType.attrSymbol);
-//        expr[0].type2 = new AttrType(AttrType.attrSymbol);
-//        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
-//        expr[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
-//        expr[0].flag = 1;
+        expr[0].next  = null;
+        expr[0].op    = new AttrOperator(AttrOperator.aopGT);
+        expr[0].type1 = new AttrType(AttrType.attrSymbol);
+        expr[0].type2 = new AttrType(AttrType.attrSymbol);
+        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
+        expr[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
+        expr[0].flag = 1;
 //        expr[1] = null;
 
-        expr[0].next  = null;
-        expr[0].op    = new AttrOperator(AttrOperator.aopEQ);
-        expr[0].type1 = new AttrType(AttrType.attrSymbol);
-        expr[0].type2 = new AttrType(AttrType.attrString);
-        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),2);
-        expr[0].operand2.string = tagName;//new FldSpec (new RelSpec(RelSpec.innerRel),1);
-        //expr[0].flag = 1;
+//
+        // Parent Node
+        expr[2].op    = new AttrOperator(AttrOperator.aopEQ);
+        expr[2].next  = null;
+        expr[2].type1 = new AttrType(AttrType.attrSymbol);
+        expr[2].type2 = new AttrType(AttrType.attrString);
+        expr[2].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),2);
+        expr[2].operand2.string = "Entry";
 
+        // Child Node
+        expr[1].op    = new AttrOperator(AttrOperator.aopEQ);
         expr[1].next  = null;
-        expr[1].op    = new AttrOperator(AttrOperator.aopGT);
         expr[1].type1 = new AttrType(AttrType.attrSymbol);
-        expr[1].type2 = new AttrType(AttrType.attrSymbol);
-        expr[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
-        expr[1].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
-        expr[1].flag = 1;
+        expr[1].type2 = new AttrType(AttrType.attrString);
+        expr[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.innerRel),2);
+        expr[1].operand2.string = "Org";
 
-        expr[2] = null;
-
+//
+        expr[3] = null;
 
 
         Tuple t = new Tuple();
@@ -318,6 +322,338 @@ class XMLRetrieve implements GlobalConst {
         }
 
         System.out.println("Records  returned by NestedLoop: " + iteasd);
+
+    System.out.println("-----------------------------------------------------------------------------------");
+
+
+        CondExpr[] expr1 = new CondExpr[3];
+        expr1[0] = new CondExpr();
+        expr1[1] = new CondExpr();
+        expr1[2] = new CondExpr();
+//        expr[3] = new CondExpr();
+        String tagName1= "PFAM";
+
+
+        // Working code for AD!!!!!!!!!!!!!!---------------------------------------
+//        expr[0].next  = null;
+//        expr[0].op    = new AttrOperator(AttrOperator.aopGT);
+//        expr[0].type1 = new AttrType(AttrType.attrSymbol);
+//        expr[0].type2 = new AttrType(AttrType.attrSymbol);
+//        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
+//        expr[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
+//        expr[0].flag = 1;
+//        expr[1] = null;
+
+        expr1[0].next  = null;
+        expr1[0].op    = new AttrOperator(AttrOperator.aopGT);
+        expr1[0].type1 = new AttrType(AttrType.attrSymbol);
+        expr1[0].type2 = new AttrType(AttrType.attrSymbol);
+        expr1[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
+        expr1[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
+        expr1[0].flag = 1;
+//        expr[1] = null;
+
+
+
+        expr1[1].op    = new AttrOperator(AttrOperator.aopEQ);
+        expr1[1].next  = null;
+        expr1[1].type1 = new AttrType(AttrType.attrSymbol);
+        expr1[1].type2 = new AttrType(AttrType.attrString);
+        expr1[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.innerRel),2);
+        expr1[1].operand2.string = "Org";
+
+//
+        expr1[2].op    = new AttrOperator(AttrOperator.aopEQ);
+        expr1[2].next  = null;
+        expr1[2].type1 = new AttrType(AttrType.attrSymbol);
+        expr1[2].type2 = new AttrType(AttrType.attrString);
+        expr1[2].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),2);
+        expr1[2].operand2.string = "Murid";
+
+//
+        expr1[2] = null;
+
+
+        Tuple t1 = new Tuple();
+
+        AttrType [] Stypes1 = new AttrType[2];
+        Stypes1[0] = new AttrType (AttrType.attrInterval);
+        Stypes1[1] = new AttrType (AttrType.attrString);
+
+        //SOS
+        short [] Ssizes1 = new short[1];
+        Ssizes1[0] = 5; //first elt. is 30
+
+        FldSpec [] Sprojection1 = new FldSpec[2];
+        Sprojection1[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        Sprojection1[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+        FldSpec [] Rprojection1 = new FldSpec[2];
+        Rprojection1[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        Rprojection1[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+
+        CondExpr [] selects1 = new CondExpr [1];
+        selects = null;
+        boolean status1 = OK;
+
+
+
+        FileScan am12 = null;
+        FileScan am22 = null;
+        try {
+//
+
+            am12  = new FileScan("test.in", Stypes1, Ssizes1,
+                    (short)2, (short)2,
+                    Sprojection1, null);
+
+            am22 = new FileScan("test.in", Stypes1, Ssizes1,
+                    (short)2, (short)2,
+                    Rprojection, null);
+
+            boolean done1 = false;
+//
+
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        // Sort merge setup starts here
+        FldSpec [] proj_list1 = new FldSpec[4];
+        proj_list1[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        proj_list1[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+        proj_list1[2] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+        proj_list1[3] = new FldSpec(new RelSpec(RelSpec.innerRel), 2);
+
+        AttrType [] jtype1 = new AttrType[2];
+        jtype1[0] = new AttrType (AttrType.attrInterval);
+        jtype1[1] = new AttrType (AttrType.attrInterval);
+//        jtype[0] = new AttrType (AttrType.attrString);
+//        jtype[1] = new AttrType (AttrType.attrString);
+
+//        TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
+//        SortMerge sm = null;
+        NestedLoopsJoins sm1 =null;
+        try {
+//            sm = new SortMerge(Stypes, 2, Ssizes,
+//                    Stypes, 2, Ssizes,
+//                    2, 5,
+//                    2, 5,
+//                    10,
+//                    am, am,
+//                    false, false, ascending,
+//                    expr, proj_list, 4);
+            sm1 = new NestedLoopsJoins(Stypes1, 2, Ssizes1, Stypes1,2,Ssizes1,10,am12,
+                    "test.in",expr1,null,proj_list1,4 );
+        }
+        catch (Exception e) {
+            System.err.println("*** join error in NestedLoop constructor ***");
+            status = FAIL;
+            System.err.println (""+e);
+            e.printStackTrace();
+        }
+
+        if (status != OK) {
+            //bail out
+            System.err.println ("*** Error constructing NestedLoop");
+            Runtime.getRuntime().exit(1);
+        }
+
+        int iteasd1 = 0;
+        boolean done1 = false;
+        try{
+            while(!done1){
+                t = sm1.get_next();
+                if(t == null){
+                    done1 = true;
+                    break;
+                }
+                iteasd1++;
+//                byte[] tupleArray = t.getTupleByteArray();
+                IntervalType i1 = t.getIntervalFld(1);
+                String tagname1 = t.getStrFld(2);
+                IntervalType j1 = t.getIntervalFld(3);
+                String tagname21 = t.getStrFld(4);
+                XMLRecord rec1 = new XMLRecord(t);
+                System.out.println( "Start = " + i1.start + " End = " +  i1.end + " Level = " + i1.level + " Tagname = " + tagname1 + " Start = " + j1.start + " End = " +  j1.end + " Level = " + j1.level + " Tagname = " + tagname21);
+
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        System.out.println("Records  returned by NestedLoop: " + iteasd1);
+
+        System.out.println("-----------------------------------------------------------------------------------");
+
+        equalityScan(sm, sm1);
+
+    }
+
+    public void equalityScan(Iterator sm1, Iterator sm2){
+
+        CondExpr[] expr = new CondExpr[4];
+        expr[0] = new CondExpr();
+        expr[1] = new CondExpr();
+        expr[2] = new CondExpr();
+        expr[3] = new CondExpr();
+        String tagName= "PFAM";
+
+
+        // Working code for AD!!!!!!!!!!!!!!---------------------------------------
+//        expr[0].next  = null;
+//        expr[0].op    = new AttrOperator(AttrOperator.aopGT);
+//        expr[0].type1 = new AttrType(AttrType.attrSymbol);
+//        expr[0].type2 = new AttrType(AttrType.attrSymbol);
+//        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
+//        expr[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
+//        expr[0].flag = 1;
+//        expr[1] = null;
+
+        expr[0].next  = null;
+        expr[0].op    = new AttrOperator(AttrOperator.aopGT);
+        expr[0].type1 = new AttrType(AttrType.attrSymbol);
+        expr[0].type2 = new AttrType(AttrType.attrSymbol);
+        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
+        expr[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
+        expr[0].flag = 1;
+//        expr[1] = null;
+
+//
+        // Parent Node
+        expr[2].op    = new AttrOperator(AttrOperator.aopEQ);
+        expr[2].next  = null;
+        expr[2].type1 = new AttrType(AttrType.attrSymbol);
+        expr[2].type2 = new AttrType(AttrType.attrString);
+        expr[2].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),2);
+        expr[2].operand2.string = "Entry";
+
+        // Child Node
+        expr[1].op    = new AttrOperator(AttrOperator.aopEQ);
+        expr[1].next  = null;
+        expr[1].type1 = new AttrType(AttrType.attrSymbol);
+        expr[1].type2 = new AttrType(AttrType.attrString);
+        expr[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.innerRel),2);
+        expr[1].operand2.string = "Org";
+
+//
+        expr[3] = null;
+
+
+        Tuple t = new Tuple();
+
+        AttrType [] Stypes = new AttrType[2];
+        Stypes[0] = new AttrType (AttrType.attrInterval);
+        Stypes[1] = new AttrType (AttrType.attrString);
+
+        //SOS
+        short [] Ssizes = new short[1];
+        Ssizes[0] = 5; //first elt. is 30
+
+        FldSpec [] Sprojection = new FldSpec[2];
+        Sprojection[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        Sprojection[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+        FldSpec [] Rprojection = new FldSpec[2];
+        Rprojection[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        Rprojection[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+
+        CondExpr [] selects = new CondExpr [1];
+        selects = null;
+        boolean status = OK;
+
+
+
+        FileScan am = null;
+        FileScan am2 = null;
+        try {
+//
+
+            am  = new FileScan("test.in", Stypes, Ssizes,
+                    (short)2, (short)2,
+                    Sprojection, null);
+
+            am2 = new FileScan("test.in", Stypes, Ssizes,
+                    (short)2, (short)2,
+                    Rprojection, null);
+
+            boolean done = false;
+//
+
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        // Sort merge setup starts here
+        FldSpec [] proj_list = new FldSpec[4];
+        proj_list[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        proj_list[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+        proj_list[2] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+        proj_list[3] = new FldSpec(new RelSpec(RelSpec.innerRel), 2);
+
+        AttrType [] jtype = new AttrType[2];
+        jtype[0] = new AttrType (AttrType.attrInterval);
+        jtype[1] = new AttrType (AttrType.attrInterval);
+//        jtype[0] = new AttrType (AttrType.attrString);
+//        jtype[1] = new AttrType (AttrType.attrString);
+
+        TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
+//        SortMerge sm = null;
+        NestedLoopsJoins sm =null;
+        try {
+//            sm = new SortMerge(Stypes, 2, Ssizes,
+//                    Stypes, 2, Ssizes,
+//                    2, 5,
+//                    2, 5,
+//                    10,
+//                    am, am,
+//                    false, false, ascending,
+//                    expr, proj_list, 4);
+            sm = new NestedLoopsJoins(Stypes, 2, Ssizes, Stypes,2,Ssizes,10,am,
+                    "test.in",expr,null,proj_list,4 );
+        }
+        catch (Exception e) {
+            System.err.println("*** join error in NestedLoop constructor ***");
+            status = FAIL;
+            System.err.println (""+e);
+            e.printStackTrace();
+        }
+
+        if (status != OK) {
+            //bail out
+            System.err.println ("*** Error constructing NestedLoop");
+            Runtime.getRuntime().exit(1);
+        }
+
+        int iteasd = 0;
+        boolean done = false;
+        try{
+            while(!done){
+                t = sm.get_next();
+                if(t == null){
+                    done = true;
+                    break;
+                }
+                iteasd++;
+                byte[] tupleArray = t.getTupleByteArray();
+                IntervalType i = t.getIntervalFld(1);
+                String tagname = t.getStrFld(2);
+                IntervalType j = t.getIntervalFld(3);
+                String tagname2 = t.getStrFld(4);
+                XMLRecord rec = new XMLRecord(t);
+                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
+
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        System.out.println("Records  returned by NestedLoop: " + iteasd);
+    }
 
 
     }
@@ -564,57 +900,236 @@ class XMLRetrieve implements GlobalConst {
     }
 
     public void tagBasedSearch(String tagnname) {
+        CondExpr[] expr = new CondExpr[4];
+        expr[0] = new CondExpr();
+        expr[1] = new CondExpr();
+        expr[2] = new CondExpr();
+        expr[3] = new CondExpr();
+        String parentTagName= "Example";
+        String childTagName = "Test";
+        String nextTagName = "Test";
 
-        AttrType[] Stypes = new AttrType[2];
-        Stypes[0] = new AttrType(AttrType.attrInterval);
-        Stypes[1] = new AttrType(AttrType.attrString);
 
-        short[] Ssizes = new short[1];
-        Ssizes[0] = 5;
+        expr[0].next  = null;
+        expr[0].op    = new AttrOperator(AttrOperator.aopGT);
+        expr[0].type1 = new AttrType(AttrType.attrSymbol);
+        expr[0].type2 = new AttrType(AttrType.attrSymbol);
+        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
+        expr[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
+        expr[0].flag = 1;
+//        expr[1] = null;
 
-        FldSpec[] sproj = new FldSpec[2];
-        sproj[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
-        sproj[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+//
+        // Parent Node
+        expr[2].op    = new AttrOperator(AttrOperator.aopEQ);
+        expr[2].next  = null;
+        expr[2].type1 = new AttrType(AttrType.attrSymbol);
+        expr[2].type2 = new AttrType(AttrType.attrString);
+        expr[2].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),2);
+        expr[2].operand2.string = "Entry";
 
-        FileScan tagSearchScan = null;
+        // Child Node
+        expr[1].op    = new AttrOperator(AttrOperator.aopEQ);
+        expr[1].next  = null;
+        expr[1].type1 = new AttrType(AttrType.attrSymbol);
+        expr[1].type2 = new AttrType(AttrType.attrString);
+        expr[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.innerRel),2);
+        expr[1].operand2.string = "Org";
 
+//
+        expr[3] = null;
+
+
+
+        Tuple t = new Tuple();
+
+        AttrType [] Stypes = new AttrType[2];
+        Stypes[0] = new AttrType (AttrType.attrInterval);
+        Stypes[1] = new AttrType (AttrType.attrString);
+
+        //SOS
+        short [] Ssizes = new short[1];
+        Ssizes[0] = 5; //first elt. is 30
+
+        FldSpec [] Sprojection = new FldSpec[2];
+        Sprojection[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        Sprojection[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+        FldSpec [] Rprojection = new FldSpec[2];
+        Rprojection[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        Rprojection[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+
+        CondExpr [] selects = new CondExpr [1];
+        selects = null;
+        boolean status = OK;
+
+
+
+        FileScan am = null;
+        FileScan am2 = null;
+        try {
+//
+
+            am  = new FileScan("test.in", Stypes, Ssizes,
+                    (short)2, (short)2,
+                    Sprojection, null);
+
+            am2 = new FileScan("test.in", Stypes, Ssizes,
+                    (short)2, (short)2,
+                    Rprojection, null);
+
+            boolean done = false;
+//
+
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        FldSpec [] proj_list = new FldSpec[4];
+        proj_list[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        proj_list[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+        proj_list[2] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+        proj_list[3] = new FldSpec(new RelSpec(RelSpec.innerRel), 2);
+
+        //Add projection index to map
+        tagIndex.put(parentTagName, 1);
+        tagIndex.put(childTagName, 2);
+
+        AttrType [] jtype = new AttrType[2];
+        jtype[0] = new AttrType (AttrType.attrInterval);
+        jtype[1] = new AttrType (AttrType.attrInterval);
+//        jtype[0] = new AttrType (AttrType.attrString);
+//        jtype[1] = new AttrType (AttrType.attrString);
+
+
+        NestedLoopsJoins sm =null;
+        try {
+//            sm = new SortMerge(Stypes, 2, Ssizes,
+//                    Stypes, 2, Ssizes,
+//                    2, 5,
+//                    2, 5,
+//                    10,
+//                    am, am,
+//                    false, false, ascending,
+//                    expr, proj_list, 4);
+            sm = new NestedLoopsJoins(Stypes, 2, Ssizes, Stypes,2,Ssizes,10,am,
+                    "test.in",expr,null,proj_list,4 );
+        }
+        catch (Exception e) {
+            System.err.println("*** join error in NestedLoop constructor ***");
+            status = FAIL;
+            System.err.println (""+e);
+            e.printStackTrace();
+        }
+
+        int iteasd1 = 0;
+        boolean done1 = false;
         try{
-            CondExpr[] expr = new CondExpr[1];
-            expr[0] = new CondExpr();
-
-            expr[0].op = new AttrOperator(AttrOperator.aopEQ);
-
-            expr[0].type1 = new AttrType(AttrType.attrSymbol);
-            expr[0].type2 = new AttrType(AttrType.attrString);
-
-            expr[0].operand1 = new Operand();
-            expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer), 2);
-
-
-            expr[0].operand2 = new Operand();
-            expr[0].operand2.string = tagnname;
-
-            tagSearchScan = new FileScan("test.in", Stypes, Ssizes, (short)2, (short)2, sproj, expr);
-
-            boolean flag = false;
-
-            while(!flag){
-
-                Tuple t = tagSearchScan.get_next();
-                if(t == null) {
+            while(!done1){
+                t = sm.get_next();
+                if(t == null){
+                    done1 = true;
                     break;
                 }
-
+                iteasd1++;
+                byte[] tupleArray = t.getTupleByteArray();
                 IntervalType i = t.getIntervalFld(1);
-                String tag = t.getStrFld(2);
-
-                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tag );
-
+                String tagname = t.getStrFld(2);
+                IntervalType j = t.getIntervalFld(3);
+                String tagname2 = t.getStrFld(4);
+//                IntervalType k = t.getIntervalFld(5);
+//                String tagname3 = t.getStrFld(6);
+                //  XMLRecord rec = new XMLRecord(t);
+                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname + "|   Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2);
+               // System.out.println( "|    Start = " + k.start + " End = " +  k.end + " Level = " + k.level + " Tagname = " + tagname3);
             }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+
+        int nextProjectionIndex;
+
+        if(nextTagName == childTagName){
+            nextProjectionIndex = tagIndex.get(childTagName);
+        } else if(nextTagName == parentTagName){
+            nextProjectionIndex = tagIndex.get(parentTagName);
+        } else {
+            nextProjectionIndex = 0;
+        }
+        System.out.println("--------------------------------------------------------------------------------------------------------------");
+
+        /*
+        *
+        *
+        *
+        * SECOND LEVEL COMPUTATION
+         *
+         *
+         *
+         *
+         */
+
+        CondExpr[] expr1 = new CondExpr[3];
+        expr1[0] = new CondExpr();
+        expr1[1] = new CondExpr();
+        expr1[2] = new CondExpr();
+
+        expr1[2] = null;
 
 
 
-        } catch (Exception e){
+        expr1[0].next  = null;
+
+        expr1[0].op    = new AttrOperator(AttrOperator.aopGT);
+        expr1[0].type1 = new AttrType(AttrType.attrSymbol);
+        expr1[0].type2 = new AttrType(AttrType.attrSymbol);
+        expr1[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),nextProjectionIndex);
+        expr1[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
+        expr1[0].flag = 1;
+//        expr[1] = null;
+
+//
+
+        // Child Node
+        expr1[1].op    = new AttrOperator(AttrOperator.aopEQ);
+        expr1[1].next  = null;
+        expr1[1].type1 = new AttrType(AttrType.attrSymbol);
+        expr1[1].type2 = new AttrType(AttrType.attrString);
+        expr1[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.innerRel),2);
+        expr1[1].operand2.string = "Hi";
+
+
+        Tuple t1 = new Tuple();
+
+        FldSpec [] projection = new FldSpec[2];
+        projection[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        projection[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+
+         status = OK;
+
+        AttrType [] Stypes1 = new AttrType[4];
+        Stypes1[0] = new AttrType (AttrType.attrInterval);
+        Stypes1[1] = new AttrType (AttrType.attrString);
+        Stypes1[2] = new AttrType (AttrType.attrInterval);
+        Stypes1[3] = new AttrType (AttrType.attrString);
+
+        //SOS
+        short [] Ssizes1 = new short[2];
+        Ssizes1[0] = 5; //first elt. is 30
+        Ssizes1[1] = 5;
+
+
+        FileScan am1 = null;
+        try {
+            am1  = new FileScan("test.in", Stypes, Ssizes,
+                    (short)2, (short)2,
+                    projection, null);
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -643,7 +1158,6 @@ class XMLRetrieve implements GlobalConst {
         XMLRetrieve xmlinsert = new XMLRetrieve();
         // xmlinsert.createCondExpr();
 //        xmlinsert.tagBasedSearch("*");
-
         xmlinsert.QP3();
     }
 }
