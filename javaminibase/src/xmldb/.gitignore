@@ -6,5 +6,10 @@
 /XMLRetrieve.class
 /XMLTuple.class
 /XMLTuple1.class
+<<<<<<< HEAD
+/RunAllQueries.class
+/NestedQP2.class
+=======
 /NestedLoopTD.class
 /XMLQueryParsing.class
+>>>>>>> 37705a0c9e2022e5530fc748b0c47f8320f39081

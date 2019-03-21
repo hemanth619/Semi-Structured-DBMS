@@ -1,5 +1,6 @@
 package xmldb;
 
+
 //originally from : joins.C
 
 import iterator.*;
@@ -13,6 +14,8 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 //import queryprocessing.Query;
 
+import diskmgr.PCounter;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -23,7 +26,7 @@ import static tests.TestDriver.OK;
 @SuppressWarnings("Duplicates")
 
 
-class NestedLoopTD implements GlobalConst {
+class NestedQP2 implements GlobalConst {
 
     static int projInc = 4;
     private boolean OK = true;
@@ -33,7 +36,7 @@ class NestedLoopTD implements GlobalConst {
 
     /** Constructor
      */
-    public NestedLoopTD() {
+    public NestedQP2() {
 
         //build XMLTuple table
         xmlTuples  = new Vector();
@@ -118,7 +121,7 @@ class NestedLoopTD implements GlobalConst {
             try {
 
                 t.setIntervalFld(1, ((XMLTuple)xmlTuples.elementAt(i)).interval);
-                System.out.println(((XMLTuple)xmlTuples.elementAt(i)).tagName + " " + i);
+                //System.out.println(((XMLTuple)xmlTuples.elementAt(i)).tagName + " " + i);
                 t.setStrFld(2, ((XMLTuple)xmlTuples.elementAt(i)).tagName);
 
             }
@@ -147,113 +150,82 @@ class NestedLoopTD implements GlobalConst {
 
     }
 
-    public void patternScan(String path) throws InvalidRelation, TupleUtilsException, FileScanException, IOException {
+    
+    public void QueryPlan2(String path) throws InvalidRelation, TupleUtilsException, FileScanException, IOException {
 
-//         Parsing pattern tree
-        BufferedReader br = null;
-        //File file = new File(path);
-        Scanner sc = null;
-        int numTags = 0;
 
-        /*try {
-            sc = new Scanner(file);
-        }
-        catch (Exception e){
-            System.out.println("Error in opening file " + e);
-        }
-*/
-        boolean initial = true;
-        int numCount = 1;
-//
+
         Map<String,String> tagMap = new HashMap<>();
-        /*ArrayList<ArrayList<String> > ruleList = new ArrayList<ArrayList<String>>();
-        try {
-            while (sc.hasNextLine() && initial) {
-                numTags = Integer.parseInt(sc.nextLine());
-                initial = false;
-            }
-            for(int j = 0; j<numTags && sc.hasNextLine(); j++){
-                tagMap.put(Integer.toString(numCount), sc.nextLine());
-                numCount++;
-            }
-            while (sc.hasNextLine()){
-                //create rule map here
-                String [] elements = sc.nextLine().split(" ");
-                ArrayList<String> rule = new ArrayList<String>();
-                int elemLength = elements.length;
-                for(int k =0;k<elemLength-1;k++){
-                    rule.add(tagMap.get(elements[k]));
-                }
-                rule.add(elements[elemLength-1]);
-                ruleList.add(rule);
-            }
-
-        }   catch(Exception e){
-            System.out.println("Error in reading Pattern Tree " + e);
-        }*/
-
-        try{
-            File file = new File("/Users/ares/ASU/DBMSI/Project/Phase 2/dbmsiPhase2/javaminibase/src/xmldbTestXML/XMLQueryInput.txt");
-            Scanner scan =new Scanner(file);
-
-            ArrayList<String> tags = new ArrayList<>();
-            ArrayList<ArrayList<String>> rules = new ArrayList<ArrayList<String>>();
+        
+        //File Scan Operations
+        //Reading 
+        File file = new File("/Users/akshayrao/git/dbmsiPhase2/javaminibase/src/xmldbTestXML/XMLQueryInput.txt");
+        Scanner scan =new Scanner(file);
+        
+        //ArrayLists for storing tags and rules from input
+        ArrayList<String> tags = new ArrayList<>();
+        ArrayList<ArrayList<String>> rules = new ArrayList<ArrayList<String>>();
 
 
-            //Scan numberoftags, tags and rules from file
-            int numberOfTags = scan.nextInt();
-            for(int i=0; i<numberOfTags; i++){
-                String tag = scan.next();
-                if(tag.length() > 5)
-                    tag = tag.substring(0,5);
-                tags.add(tag);
-                //  System.out.println(tags.get(i));
-            }
-            int j = 0;
-            while(scan.hasNext()){
-                ArrayList<String> temp = new ArrayList<>();
-                int leftTag = scan.nextInt();
-                int rightTag = scan.nextInt();
-                String relation = scan.next();
-                //System.out.println(leftTag + " " + rightTag + " " + relation);
-                temp.add(tags.get(leftTag-1));
-                temp.add(tags.get(rightTag-1));
-                temp.add(relation);
-                //   System.out.println(temp.get(0) + " " + temp.get(1) + " " + temp.get(2));
-                rules.add(temp);
+        //Scan numberoftags, tags and rules from file
+        int numberOfTags = scan.nextInt();
+        for(int i=0; i<numberOfTags; i++){
+            String tag = scan.next();
+            if(tag.length() > 5)
+                tag = tag.substring(0,5);
+            tags.add(tag);
 
-            }
-            ArrayList<String> reversedtags = new ArrayList<>();
-            for(int i= tags.size()-1; i >=0; i--){
-                reversedtags.add(tags.get(i));
-            }
+        }
+        int j = 0;
+        while(scan.hasNext()){
+            ArrayList<String> temp = new ArrayList<>();
+            int leftTag = scan.nextInt();
+            int rightTag = scan.nextInt();
+            String relation = scan.next();
+            
+            temp.add(tags.get(leftTag-1));
+            temp.add(tags.get(rightTag-1));
+            temp.add(relation);
+           
+            rules.add(temp);
 
-            ArrayList<ArrayList<String>> reversedRules = new ArrayList<ArrayList<String>>();
-            for(int i = rules.size()-1; i >= 0; i--) {
-                reversedRules.add(rules.get(i));
-            }
+        }
+        
+        //Adding to reverse tags
+        ArrayList<String> reversedtags = new ArrayList<>();
+        for(int i= tags.size()-1; i >=0; i--){
+            reversedtags.add(tags.get(i));
+        }
 
-            ArrayList<ArrayList<String>> sortedRules = XMLQueryParsing.getSortedRules(tags, rules);
-            ArrayList<ArrayList<String>> reverseSortedRules = XMLQueryParsing.getReverseSortedRules(reversedtags, reversedRules);
+        //Adding reversed rules
+        ArrayList<ArrayList<String>> reversedRules = new ArrayList<ArrayList<String>>();
+        for(int i = rules.size()-1; i >= 0; i--) {
+            reversedRules.add(rules.get(i));
+        }
 
-            for(int i=0; i<reverseSortedRules.size(); i++){
-                for(int k=0; k<reverseSortedRules.get(i).size(); k++){
-                    System.out.print(reverseSortedRules.get(i).get(k) + " ");
-                }
-                System.out.println();
-            }
+        ArrayList<ArrayList<String>> sortedRules = XMLQueryParsing.getSortedRules(tags, rules);
+        ArrayList<ArrayList<String>> reverseSortedRules = XMLQueryParsing.getReverseSortedRules(reversedtags, reversedRules);
 
-            //System.out.println(Arrays.asList(ruleList));
-            NestedLoopsJoins result = processQuery(sortedRules, tagMap);
+        //Printing reversed sorted list
+/*        for(int i=0; i<reverseSortedRules.size(); i++){
+//            for(int k=0; k<reverseSortedRules.get(i).size(); k++){
+//                System.out.print(reverseSortedRules.get(i).get(k) + " ");
+//            }
+//            System.out.println();
+//        } */
+
+        
+        NestedLoopsJoins result = processQuery(reverseSortedRules, tagMap);
+
+
 
         //Display the results
 
         int iteasd = 0;
         boolean done = false;
-        //TODO tuple setHdr-- check this
         Tuple t = new Tuple();
         try{
-            while(!done && result != null){
+            while(!done && result!=null){
                 t = result.get_next();
                 if(t == null){
                     done = true;
@@ -267,25 +239,12 @@ class NestedLoopTD implements GlobalConst {
                         System.out.print(" | Start = " + t.getIntervalFld(k).getStart() + " End = " + t.getIntervalFld(k).getEnd() + " Level = " + t.getIntervalFld(k).getLevel());
                     else
                         System.out.print(" TagName = " + t.getStrFld(k) );
-//                    System.out.println();
+
                 }
                 System.out.println("\n");
 
 
-//                IntervalType i = t.getIntervalFld(1);
-//                String tagname = t.getStrFld(2);
-//                IntervalType j = t.getIntervalFld(3);
-//                String tagname2 = t.getStrFld(4);
-//                //Adding below 2 lines for testing
-//                IntervalType k = t.getIntervalFld(5);
-//                String tagname3 = t.getStrFld(6);
-//                IntervalType l = t.getIntervalFld(7);
-//                String tagname4 = t.getStrFld(8);
-////                XMLRecord rec = new XMLRecord(t);
-//                System.out.println( "Start = " + i.start + " End = " +  i.end + " Level = " + i.level +
-//                        " Tagname = " + tagname + " Start = " + j.start + " End = " +  j.end + " Level = " + j.level + " Tagname = " + tagname2
-//                        + " Start= "+ k.start + " End = " +  k.end + " Level = " + k.level + " Tagname = " + tagname3
-//                        + " Start= "+ l.start + " End = " +  l.end + " Level = " + l.level + " Tagname = " + tagname4 );
+
 
             }
         } catch(Exception e){
@@ -293,9 +252,7 @@ class NestedLoopTD implements GlobalConst {
         }
 
         System.out.println("\nRecords  returned by Nested Loop: " + iteasd);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+
     }
 
     public NestedLoopsJoins processQuery(ArrayList<ArrayList<String>> rule, Map<String,String> tagMap){
@@ -315,39 +272,7 @@ class NestedLoopTD implements GlobalConst {
 
         createCondInit(exprInit, rule.get(0).get(0), rule.get(0).get(1),rule.get(0).get(2));
 
-//        CondExpr[] expr1 = new CondExpr[4];
-//        expr1[0] = new CondExpr();
-//        expr1[1] = new CondExpr();
-//        expr1[2] = new CondExpr();
-//        expr1[3] = new CondExpr();
-//
-//
-//        expr1[0].next  = null;
-//        expr1[0].op    = new AttrOperator(AttrOperator.aopGT);
-//        expr1[0].type1 = new AttrType(AttrType.attrSymbol);
-//        expr1[0].type2 = new AttrType(AttrType.attrSymbol);
-//        expr1[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
-//        expr1[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
-//        expr1[0].flag = 1;
-//
-//
-//        expr1[1].op    = new AttrOperator(AttrOperator.aopEQ);
-//        expr1[1].next  = null;
-//        expr1[1].type1 = new AttrType(AttrType.attrSymbol);
-//        expr1[1].type2 = new AttrType(AttrType.attrString);
-//        expr1[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),2);
-//        expr1[1].operand2.string = "root";
-//
-////
-//        expr1[2].op    = new AttrOperator(AttrOperator.aopEQ);
-//        expr1[2].next  = null;
-//        expr1[2].type1 = new AttrType(AttrType.attrSymbol);
-//        expr1[2].type2 = new AttrType(AttrType.attrString);
-//        expr1[2].operand1.symbol = new FldSpec(new RelSpec(RelSpec.innerRel),2);
-//        expr1[2].operand2.string = "Ref";
-//
-//        expr1[3] = null;
-        // Initiating File Scan
+
 
         AttrType [] Ttypes = new AttrType[2];
         Ttypes[0] = new AttrType (AttrType.attrInterval);
@@ -433,13 +358,6 @@ class NestedLoopTD implements GlobalConst {
             String second = rule.get(i).get(1);
             String currRule = rule.get(i).get(2);
 
-            if(currRule.equals("AD")){
-                expr[0].op    = new AttrOperator(AttrOperator.aopGT);
-            }else if(currRule.equals("PC")){
-                expr[0].op    = new AttrOperator(AttrOperator.aopPC);
-            }
-
-
             if(tagFieldMap.containsKey(first)){
                 GT = true;
                 expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),tagFieldMap.get(first));
@@ -449,15 +367,36 @@ class NestedLoopTD implements GlobalConst {
                 tagFieldMap.put(second,projInc+1);
             }else if(tagFieldMap.containsKey(second)){
                 GT = false;
-                expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.innerRel),1);
-                expr[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.outer),tagFieldMap.get(second));
-                expr[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),2);
+                expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),tagFieldMap.get(second));
+                expr[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),1);
+                expr[1].operand1.symbol = new FldSpec(new RelSpec(RelSpec.innerRel),2);
                 expr[1].operand2.string = first;
                 tagFieldMap.put(first,projInc+1);
 
             }
 
-            System.out.println("Inside:"+tagFieldMap);
+            if(currRule.equals("AD")){
+                if(GT){
+                    expr[0].op    = new AttrOperator(AttrOperator.aopGT);
+                }
+                else{
+                    expr[0].op    = new AttrOperator(AttrOperator.aopLT);
+                }
+
+            }else if(currRule.equals("PC")){
+                if(GT){
+                    expr[0].op    = new AttrOperator(AttrOperator.aopPC);
+                }
+                else{
+                    expr[0].op    = new AttrOperator(AttrOperator.aopCP);
+                }
+
+            }
+
+
+
+
+            //System.out.println("Inside:"+tagFieldMap);
             tagFieldMap.put(rule.get(0).get(0),1);
 
 
@@ -478,12 +417,13 @@ class NestedLoopTD implements GlobalConst {
             int k;
 
             if(!GT){
-                outProjection[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
-                outProjection[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
-                for(k=2;k<projInc+2;k++){
+                for(k=0;k<projInc;k++){
                     //TODO verify if outer works always
-                    outProjection[k] = new FldSpec(new RelSpec(RelSpec.innerRel), k+1);
+                    outProjection[k] = new FldSpec(new RelSpec(RelSpec.outer), k+1);
                 }
+                outProjection[k] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+                outProjection[k+1] = new FldSpec(new RelSpec(RelSpec.innerRel), 2);
+
 
             }
             else{
@@ -493,6 +433,20 @@ class NestedLoopTD implements GlobalConst {
                 }
                 outProjection[k] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
                 outProjection[k+1] = new FldSpec(new RelSpec(RelSpec.innerRel), 2);
+
+
+//                outProjection[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+//                outProjection[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+//                for(k=2;k<projInc+2;k++){
+//                    //TODO verify if outer works always
+//                    outProjection[k] = new FldSpec(new RelSpec(RelSpec.innerRel), k+1);
+//                }
+//                for(k=0;k<projInc;k++){
+//                    //TODO verify if outer works always
+//                    outProjection[k] = new FldSpec(new RelSpec(RelSpec.outer), k+1);
+//                }
+//                outProjection[k] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+//                outProjection[k+1] = new FldSpec(new RelSpec(RelSpec.innerRel), 2);
             }
 
             NestedLoopsJoins nljLoop =null;
@@ -572,26 +526,24 @@ class NestedLoopTD implements GlobalConst {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setValidating(false);
         DocumentBuilder db = dbf.newDocumentBuilder();
-        Document doc = db.parse(new FileInputStream(new File("/Users/ares/ASU/DBMSI/Project/Phase 2/dbmsiPhase2/javaminibase/src/xmldbTestXML/xml_sample_data.xml")));
-        String patternTreePath="/Users/ares/ASU/DBMSI/Project/Phase 2/dbmsiPhase2/javaminibase/src/xmldbTestXML/XMLQueryInput.txt";
-
+        Document doc = db.parse(new FileInputStream(new File("/Users/akshayrao/git/dbmsiPhase2/javaminibase/src/xmldbTestXML/sample_data2.xml")));
+        String patternTreePath="/Users/akshayrao/git/dbmsiPhase2/javaminibase/src/xmldbTestXML/XMLQueryInput.txt";
+        
         Node root = doc.getDocumentElement();
 
         xmlParser.build(root);
-
-        // xmlParser.BFS();
-
         xmlParser.preOrder(xmlParser.tree.root);
-//        System.out.println("---------------------------");
-//        System.out.println();
         xmlParser.BFSSetLevel();
 
-        // xmlParser.BFSPrint();
-
-        NestedLoopTD xmlinsert = new NestedLoopTD();
-        xmlinsert.patternScan(patternTreePath);
-
+        PCounter.initialize();
+        NestedQP2 xmlinsert = new NestedQP2();
+        xmlinsert.QueryPlan2(patternTreePath);        
+        
+        System.out.println("Read Counter = " + PCounter.rcounter);
+        System.out.println("Write Counter = " + PCounter.wcounter);
+        System.out.println("Total = " + (PCounter.rcounter + PCounter.wcounter));
     }
 }
+
 
 

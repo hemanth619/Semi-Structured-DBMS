@@ -1330,6 +1330,7 @@ class XMLRetrieve implements GlobalConst {
         proj_list[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
         proj_list[2] = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
         proj_list[3] = new FldSpec(new RelSpec(RelSpec.innerRel), 2);
+        Map<String, Integer> tagIndex = new HashMap<String, Integer>();
 
         //Add projection index to map
         tagIndex.put(parentTagName, 1);
