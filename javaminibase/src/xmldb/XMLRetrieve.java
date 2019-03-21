@@ -667,10 +667,12 @@ class XMLRetrieve implements GlobalConst {
         System.out.println("Records  returned by NestedLoop: " + iteasd);
     }
     
-    public static void print(Iterator it) {
+    public static void printOneInstance(Iterator it) {
     	boolean done = false;
         Tuple t = null;
         HashSet<String> tupleSet = new HashSet<>();
+        // ArrayList<String> tupleSet = new ArrayList<>(); -- this prints the sorted ones with duplicates.
+        
         try{
             while(!done){
                 t = it.get_next();
@@ -678,23 +680,23 @@ class XMLRetrieve implements GlobalConst {
                     done = true;
                     break;
                 }
-                byte[] tupleArray = t.getTupleByteArray();
+                // byte[] tupleArray = t.getTupleByteArray();
                 IntervalType i = t.getIntervalFld(1);
                 IntervalType i2 = t.getIntervalFld(3);
-                IntervalType i3 = t.getIntervalFld(5);
 
                 String tagname = t.getStrFld(2);
                 String tagname2 = t.getStrFld(4);
-                String tagname3 = t.getStrFld(6);
 
                 String result = "***Start = " + i.start + " End = " +  i.end + " Level = " + i.level + " Tagname = " + tagname;
                 result += " Start = " + i2.start + " End = " +  i2.end + " Level = " + i2.level + " Tagname = " + tagname2;
-                result += " Start = " + i3.start + " End = " +  i3.end + " Level = " + i3.level + " Tagname = " + tagname3;
                 
-                globalResults.add(result);                    
+                tupleSet.add(result);                    
             }
-            System.out.println(globalResults);
-            System.out.println(globalResults.size());
+            // System.out.println(tupleSet);
+            for(String s: tupleSet) {
+            	System.out.println(s);
+            }
+            System.out.println(tupleSet.size());
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -880,7 +882,8 @@ class XMLRetrieve implements GlobalConst {
         sm2 = sortMergeInstanceList.get(currentInstanceIndex);        
         
         try {
-            tempInstance = new SortMerge2(Stypes, 4, Ssizes, Stypes, 4, Ssizes, joinColumnIndex, 12, 1, 12, 10, sm1, sm2, false, false, ascending, expr, projectionList, 6);
+            tempInstance = new SortMerge2(Stypes, 4, Ssizes, Stypes, 4, Ssizes, joinColumnIndex, 12, 1, 12, 1000, sm1, sm2, false, false, ascending, expr, projectionList, 6);
+            colLength = 6;
         }
         catch (Exception e) {
             System.err.println("*** join error in SortMerge constructor ***");
@@ -952,7 +955,7 @@ class XMLRetrieve implements GlobalConst {
             }           
             
             // TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
-            
+            int outlen = flag ? tempVal-2: tempVal;
             tempInstance2 = tempInstance;
             sm2 = sortMergeInstanceList.get(index);        
             System.out.println("Column length: " + projectionList2.length);
@@ -972,7 +975,7 @@ class XMLRetrieve implements GlobalConst {
     	boolean done = false;
         Tuple t = null;
         HashSet<String> tupleSet = new HashSet<>();
-        try{
+        try {
             while(!done){
                 t = tempInstance.get_next();
                 if(t == null) {
@@ -999,15 +1002,18 @@ class XMLRetrieve implements GlobalConst {
 //                result += " Start = " + i5.start + " End = " +  i5.end + " Level = " + i5.level + " Tagname = " + tagname5;
 //                
                
-                for (int k=1; k<=colLength; k++) {
-                	if(k%2 != 0)
-                        System.out.print(" | Start = " + t.getIntervalFld(k).getStart() + " End = " + t.getIntervalFld(k).getEnd() + " Level = " + t.getIntervalFld(k).getLevel());
-                       else
-                           System.out.print(" TagName = " + t.getStrFld(k) );
-                	}
-                System.out.println("Total records: " + colLength);
+                String str = "";
+                for (int k=1; k<colLength; k=k+2) {
+                        str+= " | Start = " + t.getIntervalFld(k).getStart() + " End = " + t.getIntervalFld(k).getEnd() + " Level = " + t.getIntervalFld(k).getLevel();
+                        str+= " TagName = " + t.getStrFld(k+1);
+                }
+                System.out.println("= "+str);
+                globalResults.add(str);
             }
-            
+            for (String str: globalResults) 
+            	System.out.println(str);
+            System.out.println("\n Total records: " + globalResults.size());
+
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -1490,7 +1496,9 @@ class XMLRetrieve implements GlobalConst {
         instance.wrapper();
         if (instance.sortMergeInstanceList.size() > 1)
         	instance.combine();
-        
+        else if (instance.sortMergeInstanceList.size() == 1) {
+        	instance.printOneInstance(instance.sortMergeInstanceList.get(0));
+        }
 //        for (String result: globalResults) {
 //        	System.out.println(result);
 //        }
