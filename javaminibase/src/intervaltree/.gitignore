@@ -1,0 +1,10 @@
+/IntervalT.class
+/IntervalTreeHeaderPage.class
+/BTreeHeaderPage.class
+/IntervalFileScan.class
+/IntervalTPage.class
+/IntervalTreeFile.class
+/IntervalTLeafPage.class
+/IntervalTLeafPage$BTLeafPage.class
+/IntervalTSortedPage.class
+/IntervalTIndexPage.class

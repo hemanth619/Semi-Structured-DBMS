@@ -13,5 +13,13 @@ public class NodeType {
    
    /**Define a type for header page of BTFile*/
    public static final short BTHEAD=13;
+   
+   public static final short INTERVALTHEAD=14;
+   
+//   public static final short NODE = 15;
+   
+   public static final short INTERVAL_INDEX_NODE = 16;
+   
+   public static final short INTERVAL_LEAF_NODE = 17;
 
 } 
