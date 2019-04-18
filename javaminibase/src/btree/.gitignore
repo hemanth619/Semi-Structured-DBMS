@@ -43,3 +43,6 @@
 /ScanState.class
 /StringKey.class
 /UnpinPageException.class
+/IntervalT.class
+/IntervalTreeHeaderPage.class
+/IntervalKey.class

@@ -260,7 +260,7 @@ public class BTIndexPage extends BTSortedPage{
    *@return It returns the left most link. 
    *@exception IOException error from the lower layer
    */
-  protected PageId getLeftLink() 
+  public PageId getLeftLink() 
     throws IOException
     {
       return getPrevPage(); 
@@ -333,30 +333,29 @@ public class BTIndexPage extends BTSortedPage{
    * the newKey. Input parameter. 
    *@return false if no key was found; true if success.
    *@exception IndexFullDeleteException delete failed
-   */
-  
-  boolean adjustKey(KeyClass newKey, KeyClass oldKey) 
-    throws IndexFullDeleteException
-    {
-      
-      try {
-        
-	KeyDataEntry entry;
-	entry =  findKeyData( oldKey );
-	if (entry == null) return false;
-	
-	RID rid=deleteKey( entry.key );
-	if (rid==null) throw new IndexFullDeleteException(null, "Rid is null");
-	
-	rid=insertKey( newKey, ((IndexData)entry.data).getData());        
-	if (rid==null) throw new IndexFullDeleteException(null, "Rid is null");
-	
-	return true;
-      }
-      catch (Exception e) {
-        throw new IndexFullDeleteException(e, "Adjust key failed");
-      }
-    } // end of adjustKey
+   */ 
+	boolean adjustKey(KeyClass newKey, KeyClass oldKey) throws IndexFullDeleteException {
+
+		try {
+
+			KeyDataEntry entry;
+			entry = findKeyData(oldKey);
+			if (entry == null)
+				return false;
+
+			RID rid = deleteKey(entry.key);
+			if (rid == null)
+				throw new IndexFullDeleteException(null, "Rid is null");
+
+			rid = insertKey(newKey, ((IndexData) entry.data).getData());
+			if (rid == null)
+				throw new IndexFullDeleteException(null, "Rid is null");
+
+			return true;
+		} catch (Exception e) {
+			throw new IndexFullDeleteException(e, "Adjust key failed");
+		}
+	} // end of adjustKey
   
   
   /* find entry for key by B+ tree algorithm, 

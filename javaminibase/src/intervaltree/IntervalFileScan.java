@@ -18,6 +18,10 @@ public class IntervalFileScan  extends IndexFileScan
              implements  GlobalConst
 {
 
+	public IntervalFileScan() {
+		// TODO Auto-generated constructor stub
+	}
+	
 	@Override
 	public KeyDataEntry get_next() throws ScanIteratorException {
 		// TODO Auto-generated method stub
@@ -36,7 +40,10 @@ public class IntervalFileScan  extends IndexFileScan
 		return 0;
 	}
 
-
+	public void DestroyIntervalTreeFileScan() {
+		
+	}
+	
 }
 
 

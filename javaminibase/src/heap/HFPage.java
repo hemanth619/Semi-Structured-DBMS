@@ -117,6 +117,13 @@ public class HFPage extends Page
    * @exception IOException I/O errors
    */
   
+	/* Slot Count - 0-1
+	 * Used Pointer - 2-3
+	 * Free Space - 4-7
+	 * Previous Page - 8-11
+	 * Next Page - 12-15
+	 * Current Page - 16-19
+	 * */
   
   public void init(PageId pageNo, Page apage)
     throws IOException
@@ -334,7 +341,7 @@ public class HFPage extends Page
    * @exception IOException I/O errors
    * in C++ Status insertRecord(char *recPtr, int recLen, RID& rid)
    */
-  public RID insertRecord ( byte [] record)		
+  public RID insertRecord (byte [] record)		
     throws IOException
     {
       RID rid = new RID();
@@ -380,7 +387,7 @@ public class HFPage extends Page
 	}
         
 	usedPtr = Convert.getShortValue (USED_PTR, data);
-        usedPtr -= recLen;    // adjust usedPtr
+    usedPtr -= recLen;    // adjust usedPtr
 	Convert.setShortValue (usedPtr, USED_PTR, data);
 	
 	//insert the slot info onto the data page

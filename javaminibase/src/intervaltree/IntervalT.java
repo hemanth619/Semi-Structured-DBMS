@@ -57,13 +57,14 @@ public class IntervalT implements GlobalConst {
 	 */
 	protected final static int getKeyLength(KeyClass key) throws KeyNotMatchException, IOException {
 		if (key instanceof StringKey) {
-
 			OutputStream out = new ByteArrayOutputStream();
 			DataOutputStream outstr = new DataOutputStream(out);
 			outstr.writeUTF(((StringKey) key).getKey());
 			return outstr.size();
 		} else if (key instanceof IntegerKey)
 			return 4;
+		else if (key instanceof IntervalKey)
+			return 12; // TODO verify
 		else
 			throw new KeyNotMatchException(null, "key types do not match");
 	}
@@ -102,6 +103,7 @@ public class IntervalT implements GlobalConst {
 		System.out.println("");
 	}
 
+	// TODO modify to include IntervalTSortedPage, IntervalTIndexPage
 	private static void _printIntervalTree(PageId currentPageId, String prefix, int i, int keyType)
 			throws IOException, ConstructPageException, IteratorException, HashEntryNotFoundException,
 			InvalidFrameNumberException, PageUnpinnedException, ReplacerException {
@@ -241,6 +243,9 @@ public class IntervalT implements GlobalConst {
 			} else if (keyType == AttrType.attrString) {
 				// System.out.println(" offset "+ offset + " " + length + " "+n);
 				key = new StringKey(Convert.getStrValue(offset, from, length - n));
+			} else if (keyType == AttrType.attrInterval) {
+				// TODO: verify whether it reads all 12 bytes
+				key = new IntervalKey(Convert.getIntervalValue(offset, from));			
 			} else
 				throw new KeyNotMatchException(null, "key types do not match");
 
@@ -259,5 +264,51 @@ public class IntervalT implements GlobalConst {
 	// TODO: Modify implementation based on use case
 	public static void printNonLeafTreeUtilization(IntervalTreeHeaderPage header) {
 		
+	}
+	
+	/**
+	 * It convert a keyDataEntry to byte[].
+	 * 
+	 * @param entry specify the data entry. Input parameter.
+	 * @return return a byte array with size equal to the size of (key,data).
+	 * @exception KeyNotMatchException  entry.key is neither StringKey nor
+	 *                                  IntegerKey
+	 * @exception NodeNotMatchException entry.data is neither LeafData nor IndexData
+	 * @exception ConvertException      error from the lower layer
+	 */
+	protected final static byte[] getBytesFromEntry(KeyDataEntry entry)
+			throws KeyNotMatchException, NodeNotMatchException, ConvertException {
+		byte[] data;
+		int n, m;
+		try {
+			n = getKeyLength(entry.key); // should be 12 for interval key
+			m = n;
+			if (entry.data instanceof IndexData)
+				n += 4;
+			else if (entry.data instanceof LeafData)
+				n += 8;
+
+			data = new byte[n];
+
+			if (entry.key instanceof IntegerKey) {
+				Convert.setIntValue(((IntegerKey) entry.key).getKey().intValue(), 0, data);
+			} else if (entry.key instanceof StringKey) {
+				Convert.setStrValue(((StringKey) entry.key).getKey(), 0, data);
+			} else if (entry.key instanceof IntervalKey) {
+				Convert.setIntervalValue(((IntervalKey)entry.key).getKey(), 0, data);
+			} else
+				throw new KeyNotMatchException(null, "key types do not match");
+
+			if (entry.data instanceof IndexData) {
+				Convert.setIntValue(((IndexData) entry.data).getData().pid, m, data);
+			} else if (entry.data instanceof LeafData) {
+				Convert.setIntValue(((LeafData) entry.data).getData().slotNo, m, data);
+				Convert.setIntValue(((LeafData) entry.data).getData().pageNo.pid, m + 4, data);
+			} else
+				throw new NodeNotMatchException(null, "node types do not match");
+			return data;
+		} catch (IOException e) {
+			throw new ConvertException(e, "convert failed");
+		}
 	}
 }
