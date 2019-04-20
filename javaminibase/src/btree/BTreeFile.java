@@ -383,7 +383,7 @@ public class BTreeFile extends IndexFile implements GlobalConst {
 			trace.writeBytes("SEARCH" + lineSep);
 			trace.flush();
 		}
-// TODO: To be continued on 8th April 2019
+
 		newRootEntry = _insert(key, rid, headerPage.get_rootId());
 
 		// TWO CASES:

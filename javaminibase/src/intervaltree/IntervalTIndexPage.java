@@ -127,6 +127,37 @@ public class IntervalTIndexPage extends IntervalTSortedPage {
 	} // end of getNext
 	
 	/*
+	 * This function encapsulates the search routine to search a BTIndexPage by B++
+	 * search algorithm
+	 * 
+	 * @param key the key value used in search algorithm. Input parameter.
+	 * 
+	 * @return It returns the page_no of the child to be searched next.
+	 * 
+	 * @exception IndexSearchException Index search failed;
+	 */
+	PageId getPageNoByKey(KeyClass key) throws IndexSearchException {
+		KeyDataEntry entry;
+		int i;
+
+		try {
+
+			for (i = getSlotCnt() - 1; i >= 0; i--) {
+				entry = IntervalT.getEntryFromBytes(getpage(), getSlotOffset(i), getSlotLength(i), keyType, NodeType.INDEX);
+
+				if (IntervalT.keyCompare(key, entry.key) >= 0) {
+					return ((IndexData) entry.data).getData();
+				}
+			}
+
+			return getPrevPage();
+		} catch (Exception e) {
+			throw new IndexSearchException(e, "Get entry failed");
+		}
+
+	} // getPageNoByKey
+	
+	/*
 	 * find entry for key by B+ tree algorithm, but entry.key may not equal
 	 * KeyDataEntry.key returned.
 	 * 

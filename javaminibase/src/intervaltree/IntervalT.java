@@ -70,6 +70,40 @@ public class IntervalT implements GlobalConst {
 	}
 
 	/**
+	 * It gets the length of the data
+	 * 
+	 * @param pageType NodeType.LEAF or NodeType.INDEX. Input parameter.
+	 * @return return 8 if it is of NodeType.LEAF; return 4 if it is of
+	 *         NodeType.INDEX.
+	 * @exception NodeNotMatchException pageType is neither NodeType.LEAF nor
+	 *                                  NodeType.INDEX.
+	 */
+	protected final static int getDataLength(short pageType) throws NodeNotMatchException {
+		if (pageType == NodeType.LEAF)
+			return 8;
+		else if (pageType == NodeType.INDEX)
+			return 4;
+		else
+			throw new NodeNotMatchException(null, "key types do not match");
+	}
+
+	/**
+	 * It gets the length of the (key,data) pair in leaf or index page.
+	 * 
+	 * @param key      an object of KeyClass. Input parameter.
+	 * @param pageType NodeType.LEAF or NodeType.INDEX. Input parameter.
+	 * @return return the lenrth of the (key,data) pair.
+	 * @exception KeyNotMatchException  key is neither StringKey nor IntegerKey
+	 * @exception NodeNotMatchException pageType is neither NodeType.LEAF nor
+	 *                                  NodeType.INDEX.
+	 * @exception IOException           error from the lower layer
+	 */
+	protected final static int getKeyDataLength(KeyClass key, short pageType)
+			throws KeyNotMatchException, NodeNotMatchException, IOException {
+		return getKeyLength(key) + getDataLength(pageType);
+	}
+
+	/**
 	 * For debug. Print the B+ tree structure out
 	 * 
 	 * @param header the head page of the B+ tree file
