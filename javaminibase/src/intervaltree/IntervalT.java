@@ -46,7 +46,7 @@ public class IntervalT implements GlobalConst {
 			throw new KeyNotMatchException(null, "key types do not match");
 		}
 	}
-	
+
 	/**
 	 * It gets the length of the key
 	 * 
@@ -137,33 +137,10 @@ public class IntervalT implements GlobalConst {
 		System.out.println("");
 	}
 
-	// TODO modify to include IntervalTSortedPage, IntervalTIndexPage
-	private static void _printIntervalTree(PageId currentPageId, String prefix, int i, int keyType)
-			throws IOException, ConstructPageException, IteratorException, HashEntryNotFoundException,
-			InvalidFrameNumberException, PageUnpinnedException, ReplacerException {
-
-		BTSortedPage sortedPage = new BTSortedPage(currentPageId, keyType);
-		prefix = prefix + "       ";
-		i++;
-		if (sortedPage.getType() == NodeType.INDEX) {
-			BTIndexPage indexPage = new BTIndexPage((Page) sortedPage, keyType);
-
-			System.out.println(i + prefix + indexPage.getPrevPage());
-			_printIntervalTree(indexPage.getPrevPage(), prefix, i, keyType);
-
-			RID rid = new RID();
-			for (KeyDataEntry entry = indexPage.getFirst(rid); entry != null; entry = indexPage.getNext(rid)) {
-				System.out.println(i + prefix + (IndexData) entry.data);
-				_printIntervalTree(((IndexData) entry.data).getData(), prefix, i, keyType);
-			}
-		}
-		SystemDefs.JavabaseBM.unpinPage(currentPageId, true/* dirty */);
-	}
-	
 	/**
 	 * used for debug: to print a page out. The page is either BTIndexPage, or
 	 * BTLeafPage.
-	 * 
+	 *
 	 * @param pageno  the number of page. Input parameter.
 	 * @param keyType It specifies the type of key. It can be AttrType.attrString or
 	 *                AttrType.attrInteger. Input parameter.
@@ -175,16 +152,16 @@ public class IntervalT implements GlobalConst {
 	 * @exception PageUnpinnedException       error from the lower layer
 	 * @exception InvalidFrameNumberException error from the lower layer
 	 */
-	
+
 	// TODO: Modify implementation based on use case
 	public static void printPage(PageId pageno, int keyType)
 			throws IOException, IteratorException, ConstructPageException, HashEntryNotFoundException,
 			ReplacerException, PageUnpinnedException, InvalidFrameNumberException {
-		BTSortedPage sortedPage = new BTSortedPage(pageno, keyType);
+		IntervalTSortedPage sortedPage = new IntervalTSortedPage(pageno, keyType);
 		int i;
 		i = 0;
 		if (sortedPage.getType() == NodeType.INDEX) {
-			BTIndexPage indexPage = new BTIndexPage((Page) sortedPage, keyType);
+			IntervalTIndexPage indexPage = new IntervalTIndexPage((Page) sortedPage, keyType);
 			System.out.println("");
 			System.out.println("**************To Print an Index Page ********");
 			System.out.println("Current Page ID: " + indexPage.getCurPage().pid);
@@ -199,6 +176,10 @@ public class IntervalT implements GlobalConst {
 				if (keyType == AttrType.attrString)
 					System.out.println(
 							i + " (key, pageId):   (" + (StringKey) entry.key + ",  " + (IndexData) entry.data + " )");
+				// TODO: CONFIRM WITH RONAK
+				if (keyType == AttrType.attrInterval)
+					System.out.println(
+							i + " (key, pageId): (" + (IntervalKey) entry.key + ", " + (IndexData) entry.data + " )");
 
 				i++;
 			}
@@ -206,7 +187,7 @@ public class IntervalT implements GlobalConst {
 			System.out.println("************** END ********");
 			System.out.println("");
 		} else if (sortedPage.getType() == NodeType.LEAF) {
-			BTLeafPage leafPage = new BTLeafPage((Page) sortedPage, keyType);
+			IntervalTLeafPage leafPage = new IntervalTLeafPage((Page) sortedPage, keyType);
 			System.out.println("");
 			System.out.println("**************To Print an Leaf Page ********");
 			System.out.println("Current Page ID: " + leafPage.getCurPage().pid);
@@ -222,6 +203,10 @@ public class IntervalT implements GlobalConst {
 				if (keyType == AttrType.attrString)
 					System.out.println(i + " (key, [pageNo, slotNo]):   (" + (StringKey) entry.key + ",  "
 							+ (LeafData) entry.data);
+				// TODO: CONFIRM WITH RONAK
+				if (keyType == AttrType.attrInterval)
+					System.out.println(i + " (key, [pageNo, slotNo]):   (" + (StringKey) entry.key + ",  "
+							+ (LeafData) entry.data);
 
 				i++;
 			}
@@ -234,7 +219,7 @@ public class IntervalT implements GlobalConst {
 
 		SystemDefs.JavabaseBM.unpinPage(pageno, true/* dirty */);
 	}
-	
+
 	/**
 	 * It gets an keyDataEntry from bytes array and position
 	 * 
@@ -279,7 +264,7 @@ public class IntervalT implements GlobalConst {
 				key = new StringKey(Convert.getStrValue(offset, from, length - n));
 			} else if (keyType == AttrType.attrInterval) {
 				// TODO: verify whether it reads all 12 bytes
-				key = new IntervalKey(Convert.getIntervalValue(offset, from));			
+				key = new IntervalKey(Convert.getIntervalValue(offset, from));
 			} else
 				throw new KeyNotMatchException(null, "key types do not match");
 
@@ -292,14 +277,14 @@ public class IntervalT implements GlobalConst {
 
 	// TODO: Modify implementation based on use case
 	public static void printTreeUtilization(IntervalTreeHeaderPage header) {
-		
+
 	}
-	
+
 	// TODO: Modify implementation based on use case
 	public static void printNonLeafTreeUtilization(IntervalTreeHeaderPage header) {
-		
+
 	}
-	
+
 	/**
 	 * It convert a keyDataEntry to byte[].
 	 * 
@@ -329,7 +314,7 @@ public class IntervalT implements GlobalConst {
 			} else if (entry.key instanceof StringKey) {
 				Convert.setStrValue(((StringKey) entry.key).getKey(), 0, data);
 			} else if (entry.key instanceof IntervalKey) {
-				Convert.setIntervalValue(((IntervalKey)entry.key).getKey(), 0, data);
+				Convert.setIntervalValue(((IntervalKey) entry.key).getKey(), 0, data);
 			} else
 				throw new KeyNotMatchException(null, "key types do not match");
 
@@ -344,5 +329,107 @@ public class IntervalT implements GlobalConst {
 		} catch (IOException e) {
 			throw new ConvertException(e, "convert failed");
 		}
+	}
+	
+	private static void _printIntervalTree(PageId currentPageId, String prefix, int i, int keyType)
+			throws IOException, ConstructPageException, IteratorException, HashEntryNotFoundException,
+			InvalidFrameNumberException, PageUnpinnedException, ReplacerException {
+
+		IntervalTSortedPage sortedPage = new IntervalTSortedPage(currentPageId, keyType);
+		prefix = prefix + "       ";
+		i++;
+		if (sortedPage.getType() == NodeType.INDEX) {
+			IntervalTIndexPage indexPage = new IntervalTIndexPage((Page) sortedPage, keyType);
+
+			System.out.println(i + prefix + indexPage.getPrevPage());
+			_printTree(indexPage.getPrevPage(), prefix, i, keyType);
+
+			RID rid = new RID();
+			for (KeyDataEntry entry = indexPage.getFirst(rid); entry != null; entry = indexPage.getNext(rid)) {
+				System.out.println(i + prefix + (IndexData) entry.data);
+				_printTree(((IndexData) entry.data).getData(), prefix, i, keyType);
+			}
+		}
+		SystemDefs.JavabaseBM.unpinPage(currentPageId, true/* dirty */);
+	}
+
+	/**
+	 * For debug. Print all leaf pages of the B+ tree out
+	 * 
+	 * @param header the head page of the B+ tree file
+	 * @exception IOException                 error from the lower layer
+	 * @exception ConstructPageException      error for BT page constructor
+	 * @exception IteratorException           error from iterator
+	 * @exception HashEntryNotFoundException  error from lower layer
+	 * @exception InvalidFrameNumberException error from lower layer
+	 * @exception PageUnpinnedException       error from lower layer
+	 * @exception ReplacerException           error from lower layer
+	 */
+	public static void printAllLeafPages(IntervalTreeHeaderPage header)
+			throws IOException, ConstructPageException, IteratorException, HashEntryNotFoundException,
+			InvalidFrameNumberException, PageUnpinnedException, ReplacerException {
+		if (header.get_rootId().pid == INVALID_PAGE) {
+			System.out.println("The Tree is Empty!!!");
+			return;
+		}
+
+		System.out.println("");
+		System.out.println("");
+		System.out.println("");
+		System.out.println("---------------The B+ Tree Leaf Pages---------------");
+
+		_printAllLeafPages(header.get_rootId(), header.get_keyType());
+
+		System.out.println("");
+		System.out.println("");
+		System.out.println("------------- All Leaf Pages Have Been Printed --------");
+		System.out.println("");
+		System.out.println("");
+	}
+
+	private static void _printAllLeafPages(PageId currentPageId, int keyType)
+			throws IOException, ConstructPageException, IteratorException, InvalidFrameNumberException,
+			HashEntryNotFoundException, PageUnpinnedException, ReplacerException {
+
+		IntervalTSortedPage sortedPage = new IntervalTSortedPage(currentPageId, keyType);
+
+		if (sortedPage.getType() == NodeType.INDEX) {
+			IntervalTIndexPage indexPage = new IntervalTIndexPage((Page) sortedPage, keyType);
+
+			_printAllLeafPages(indexPage.getPrevPage(), keyType);
+
+			RID rid = new RID();
+			for (KeyDataEntry entry = indexPage.getFirst(rid); entry != null; entry = indexPage.getNext(rid)) {
+				_printAllLeafPages(((IndexData) entry.data).getData(), keyType);
+			}
+		}
+
+		if (sortedPage.getType() == NodeType.LEAF) {
+			printPage(currentPageId, keyType);
+		}
+
+		SystemDefs.JavabaseBM.unpinPage(currentPageId, true/* dirty */);
+	}
+
+	private static void _printTree(PageId currentPageId, String prefix, int i, int keyType)
+			throws IOException, ConstructPageException, IteratorException, HashEntryNotFoundException,
+			InvalidFrameNumberException, PageUnpinnedException, ReplacerException {
+
+		IntervalTSortedPage sortedPage = new IntervalTSortedPage(currentPageId, keyType);
+		prefix = prefix + "       ";
+		i++;
+		if (sortedPage.getType() == NodeType.INDEX) {
+			IntervalTIndexPage indexPage = new IntervalTIndexPage((Page) sortedPage, keyType);
+
+			System.out.println(i + prefix + indexPage.getPrevPage());
+			_printTree(indexPage.getPrevPage(), prefix, i, keyType);
+
+			RID rid = new RID();
+			for (KeyDataEntry entry = indexPage.getFirst(rid); entry != null; entry = indexPage.getNext(rid)) {
+				System.out.println(i + prefix + (IndexData) entry.data);
+				_printTree(((IndexData) entry.data).getData(), prefix, i, keyType);
+			}
+		}
+		SystemDefs.JavabaseBM.unpinPage(currentPageId, true/* dirty */);
 	}
 }

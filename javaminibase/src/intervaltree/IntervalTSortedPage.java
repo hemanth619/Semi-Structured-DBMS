@@ -1,5 +1,7 @@
 package intervaltree;
 
+import java.io.IOException;
+
 import btree.BT;
 import btree.ConstructPageException;
 import btree.DeleteRecException;
@@ -85,6 +87,16 @@ public class IntervalTSortedPage extends HFPage {
 	RID insertRecord(KeyClass key, RID dataRid) throws LeafInsertRecException {
 		return null;
 	}
+	
+    /** How many records are in the page
+     *@param returns the number of records.
+     *@exception IOException I/O errors
+     */
+    protected int numberOfRecords()
+            throws IOException
+    {
+        return getSlotCnt();
+    }
 	
 	/**
 	 * Performs a sorted insertion of a record on an record page. The records are

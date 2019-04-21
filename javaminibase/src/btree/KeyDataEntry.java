@@ -58,7 +58,10 @@ public class KeyDataEntry {
      if ( key instanceof IntegerKey ) 
         this.key= new IntegerKey(((IntegerKey)key).getKey());
      else if ( key instanceof StringKey ) 
-        this.key= new StringKey(((StringKey)key).getKey());    
+        this.key= new StringKey(((StringKey)key).getKey());
+     else if(key instanceof IntervalKey) {
+    	 this.key = new IntervalKey(((IntervalKey)key).getKey());
+     }
   };
 
 
@@ -75,7 +78,10 @@ public class KeyDataEntry {
      if ( key instanceof IntegerKey ) 
         this.key= new IntegerKey(((IntegerKey)key).getKey());
      else if ( key instanceof StringKey ) 
-        this.key= new StringKey(((StringKey)key).getKey()); 
+        this.key= new StringKey(((StringKey)key).getKey());
+     else if (key instanceof IntervalKey) {
+    	 this.key = new IntervalKey(((IntervalKey)key).getKey());
+     }
 
      if ( data instanceof IndexData ) 
         this.data= new IndexData(((IndexData)data).getData());

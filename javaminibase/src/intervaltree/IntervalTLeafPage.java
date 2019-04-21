@@ -207,8 +207,8 @@ public class IntervalTLeafPage extends IntervalTSortedPage {
 	 * 
 	 * @return true if redistrbution success. false if we can not redistribute them.
 	 */
-	boolean redistribute(IntervalTLeafPage leafPage, IntervalTIndexPage parentIndexPage, int direction, KeyClass deletedKey)
-			throws LeafRedistributeException {
+	boolean redistribute(IntervalTLeafPage leafPage, IntervalTIndexPage parentIndexPage, int direction,
+			KeyClass deletedKey) throws LeafRedistributeException {
 		boolean st;
 		// assertion: leafPage pinned
 		try {

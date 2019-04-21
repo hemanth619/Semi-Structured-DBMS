@@ -5,18 +5,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import intervaltree.IntervalT;
-import btree.BT;
-import btree.BTIndexPage;
-import btree.BTLeafPage;
-import btree.BTSortedPage;
-import btree.BTreeHeaderPage;
 import intervaltree.IntervalTreeHeaderPage;
+import btree.AddFileEntryException;
 import btree.ConstructPageException;
 import btree.ConvertException;
 import btree.DeleteFashionException;
 import btree.DeleteFileEntryException;
 import btree.DeleteRecException;
 import btree.FreePageException;
+import btree.GetFileEntryException;
 import btree.IndexData;
 import btree.IndexFile;
 import btree.IndexFullDeleteException;
@@ -52,6 +49,7 @@ import global.GlobalConst;
 import global.PageId;
 import global.RID;
 import global.SystemDefs;
+import heap.HFPage;
 
 public class IntervalTreeFile extends IndexFile implements GlobalConst {
 
@@ -61,19 +59,44 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 
 	private static FileOutputStream fos;
 	private static DataOutputStream trace;
-	
+
 	private IntervalTreeHeaderPage headerPage;
 	private PageId headerPageId;
 	private String dbname;
-	
-	public IntervalTreeFile(String filename) {
-		
+
+	public IntervalTreeFile(String filename) throws ConstructPageException, GetFileEntryException {
+		headerPageId = get_file_entry(filename);
+
+		headerPage = new IntervalTreeHeaderPage(headerPageId);
+		dbname = new String(filename);
 	}
 	
+	public IntervalTreeFile(String filename, int keytype, int keysize, int delete_fashion)
+			throws GetFileEntryException, ConstructPageException, IOException, AddFileEntryException {
+
+		headerPageId = get_file_entry(filename);
+		if (headerPageId == null) // file not exist
+		{
+			headerPage = new IntervalTreeHeaderPage(); // initialize a header page
+			headerPageId = headerPage.getPageId(); // get the page ID
+			add_file_entry(filename, headerPageId);
+			headerPage.set_magic0(MAGIC0);
+			headerPage.set_rootId(new PageId(INVALID_PAGE));
+			headerPage.set_keyType((short) keytype);
+			headerPage.set_maxKeySize(keysize);
+			headerPage.set_deleteFashion(delete_fashion);
+			headerPage.setType(NodeType.INTERVALTHEAD);
+		} else {
+			headerPage = new IntervalTreeHeaderPage(headerPageId);
+		}
+
+		dbname = new String(filename);
+	}
+
 	public IntervalTreeFile(String filename, int delete_fashion) {
-		
+
 	}
-	
+
 	private void freePage(PageId pageno) throws FreePageException {
 		try {
 			SystemDefs.JavabaseBM.freePage(pageno);
@@ -84,6 +107,149 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 
 	}
 	
+	private PageId get_file_entry(String filename) throws GetFileEntryException {
+		try {
+			return SystemDefs.JavabaseDB.get_file_entry(filename);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new GetFileEntryException(e, "");
+		}
+	}
+
+	private void add_file_entry(String fileName, PageId pageno) throws AddFileEntryException {
+		try {
+			SystemDefs.JavabaseDB.add_file_entry(fileName, pageno);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AddFileEntryException(e, "");
+		}
+	}
+	
+	/*
+	 * findRunStart. Status BTreeFile::findRunStart (const void lo_key, RID
+	 * *pstartrid)
+	 *
+	 * find left-most occurrence of `lo_key', going all the way left if lo_key is
+	 * null.
+	 *
+	 * Starting record returned in *pstartrid, on page *pppage, which is pinned.
+	 *
+	 * Since we allow duplicates, this must "go left" as described in the text (for
+	 * the search algorithm).
+	 * 
+	 * @param lo_key find left-most occurrence of `lo_key', going all the way left
+	 * if lo_key is null.
+	 * 
+	 * @param startrid it will reurn the first rid =< lo_key
+	 * 
+	 * @return return a BTLeafPage instance which is pinned. null if no key was
+	 * found.
+	 */
+
+	IntervalTLeafPage findRunStart(KeyClass lo_key, RID startrid) throws IOException, IteratorException,
+			KeyNotMatchException, ConstructPageException, PinPageException, UnpinPageException {
+		IntervalTLeafPage pageLeaf;
+		IntervalTIndexPage pageIndex;
+		Page page;
+		IntervalTSortedPage sortPage;
+		PageId pageno;
+		PageId curpageno = null; // iterator
+		PageId prevpageno;
+		PageId nextpageno;
+		RID curRid;
+		KeyDataEntry curEntry;
+
+		pageno = headerPage.get_rootId();
+
+		if (pageno.pid == INVALID_PAGE) { // no pages in the BTREE
+			pageLeaf = null; // should be handled by
+			// startrid =INVALID_PAGEID ; // the caller
+			return pageLeaf;
+		}
+
+		page = pinPage(pageno);
+		sortPage = new IntervalTSortedPage(page, headerPage.get_keyType());
+
+		if (trace != null) {
+			trace.writeBytes("VISIT node " + pageno + lineSep);
+			trace.flush();
+		}
+
+		// ASSERTION
+		// - pageno and sortPage is the root of the btree
+		// - pageno and sortPage valid and pinned
+
+		while (sortPage.getType() == NodeType.INDEX) {
+			pageIndex = new IntervalTIndexPage(page, headerPage.get_keyType());
+			prevpageno = pageIndex.getPrevPage();
+			curEntry = pageIndex.getFirst(startrid);
+			while (curEntry != null && lo_key != null && IntervalT.keyCompare(curEntry.key, lo_key) < 0) {
+
+				prevpageno = ((IndexData) curEntry.data).getData();
+				curEntry = pageIndex.getNext(startrid);
+			}
+
+			unpinPage(pageno);
+
+			pageno = prevpageno;
+			page = pinPage(pageno);
+			sortPage = new IntervalTSortedPage(page, headerPage.get_keyType());
+
+			if (trace != null) {
+				trace.writeBytes("VISIT node " + pageno + lineSep);
+				trace.flush();
+			}
+
+		}
+
+		pageLeaf = new IntervalTLeafPage(page, headerPage.get_keyType());
+
+		curEntry = pageLeaf.getFirst(startrid);
+		while (curEntry == null) {
+			// skip empty leaf pages off to left
+			nextpageno = pageLeaf.getNextPage();
+			unpinPage(pageno);
+			if (nextpageno.pid == INVALID_PAGE) {
+				// oops, no more records, so set this scan to indicate this.
+				return null;
+			}
+
+			pageno = nextpageno;
+			pageLeaf = new IntervalTLeafPage(pinPage(pageno), headerPage.get_keyType());
+			curEntry = pageLeaf.getFirst(startrid);
+		}
+
+		// ASSERTIONS:
+		// - curkey, curRid: contain the first record on the
+		// current leaf page (curkey its key, cur
+		// - pageLeaf, pageno valid and pinned
+
+		if (lo_key == null) {
+			return pageLeaf;
+			// note that pageno/pageLeaf is still pinned;
+			// scan will unpin it when done
+		}
+
+		while (IntervalT.keyCompare(curEntry.key, lo_key) < 0) {
+			curEntry = pageLeaf.getNext(startrid);
+			while (curEntry == null) { // have to go right
+				nextpageno = pageLeaf.getNextPage();
+				unpinPage(pageno);
+
+				if (nextpageno.pid == INVALID_PAGE) {
+					return null;
+				}
+
+				pageno = nextpageno;
+				pageLeaf = new IntervalTLeafPage(pinPage(pageno), headerPage.get_keyType());
+
+				curEntry = pageLeaf.getFirst(startrid);
+			}
+		}
+
+		return pageLeaf;
+	}
+
 	private Page pinPage(PageId pageno) throws PinPageException {
 		try {
 			Page page = new Page();
@@ -94,7 +260,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			throw new PinPageException(e, "");
 		}
 	}
-	
+
 	private void unpinPage(PageId pageno) throws UnpinPageException {
 		try {
 			SystemDefs.JavabaseBM.unpinPage(pageno, false /* = not DIRTY */);
@@ -103,7 +269,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			throw new UnpinPageException(e, "");
 		}
 	}
-	
+
 	private void unpinPage(PageId pageno, boolean dirty) throws UnpinPageException {
 		try {
 			SystemDefs.JavabaseBM.unpinPage(pageno, dirty);
@@ -112,7 +278,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			throw new UnpinPageException(e, "");
 		}
 	}
-	
+
 	private void delete_file_entry(String filename) throws DeleteFileEntryException {
 		try {
 			SystemDefs.JavabaseDB.delete_file_entry(filename);
@@ -121,7 +287,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			throw new DeleteFileEntryException(e, "");
 		}
 	}
-	
+
 	/**
 	 * Destroy entire B+ tree file.
 	 * 
@@ -154,7 +320,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 		sortedPage = new IntervalTSortedPage(page, headerPage.get_keyType());
 
 		if (sortedPage.getType() == NodeType.INDEX) {
-			BTIndexPage indexPage = new BTIndexPage(page, headerPage.get_keyType());
+			IntervalTIndexPage indexPage = new IntervalTIndexPage(page, headerPage.get_keyType());
 			RID rid = new RID();
 			PageId childId;
 			KeyDataEntry entry;
@@ -167,7 +333,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			freePage(pageno);
 		}
 	}
-	
+
 	/**
 	 * Stop tracing. And close trace file.
 	 * 
@@ -181,7 +347,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 		fos = null;
 		trace = null;
 	}
-	
+
 //	/**
 //	 * insert record with the given key and rid
 //	 * 
@@ -346,7 +512,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 //
 //		return;
 //	}
-	
+
 	private void updateHeader(PageId newRoot) throws IOException, PinPageException, UnpinPageException {
 
 		IntervalTreeHeaderPage header;
@@ -363,27 +529,28 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 		// ASSERTIONS:
 		// - headerPage, headerPageId valid, pinned and marked as dirty
 	}
-	
+
 	/**
-	   * Insert entry into the index file.
-	   * @param data the key for the entry
-	   * @param rid the rid of the tuple with the key
-	   * @exception IOException from lower layers
-	   * @exception KeyTooLongException the key is too long
-	   * @exception KeyNotMatchException the keys do not match
-	   * @exception LeafInsertRecException  insert record to leaf page failed 
-	   * @exception IndexInsertRecException insert record to index page failed
-	   * @exception ConstructPageException  fail to construct a header page
-	   * @exception UnpinPageException unpin page failed
-	   * @exception PinPageException  pin page failed
-	   * @exception NodeNotMatchException  nodes do not match
-	   * @exception ConvertException conversion failed (from global package)
-	   * @exception DeleteRecException delete record failed
-	   * @exception IndexSearchException index search failed
-	   * @exception IteratorException  error from iterator 
-	   * @exception LeafDeleteException delete leaf page failed
-	   * @exception InsertException insert record failed
-	   */
+	 * Insert entry into the index file.
+	 * 
+	 * @param data the key for the entry
+	 * @param rid  the rid of the tuple with the key
+	 * @exception IOException             from lower layers
+	 * @exception KeyTooLongException     the key is too long
+	 * @exception KeyNotMatchException    the keys do not match
+	 * @exception LeafInsertRecException  insert record to leaf page failed
+	 * @exception IndexInsertRecException insert record to index page failed
+	 * @exception ConstructPageException  fail to construct a header page
+	 * @exception UnpinPageException      unpin page failed
+	 * @exception PinPageException        pin page failed
+	 * @exception NodeNotMatchException   nodes do not match
+	 * @exception ConvertException        conversion failed (from global package)
+	 * @exception DeleteRecException      delete record failed
+	 * @exception IndexSearchException    index search failed
+	 * @exception IteratorException       error from iterator
+	 * @exception LeafDeleteException     delete leaf page failed
+	 * @exception InsertException         insert record failed
+	 */
 	public void insert(KeyClass key, final RID rid) throws KeyTooLongException, KeyNotMatchException,
 			LeafInsertRecException, IndexInsertRecException, ConstructPageException, UnpinPageException,
 			PinPageException, NodeNotMatchException, ConvertException, DeleteRecException, IndexSearchException,
@@ -394,31 +561,31 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 		/* 1. Basic Check */
 		if (IntervalT.getKeyLength(key) > headerPage.get_maxKeySize())
 			throw new KeyTooLongException(null, "");
-		
-		/*2. Basic Check */
+
+		/* 2. Basic Check */
 		if (key instanceof IntervalKey == false || headerPage.get_keyType() != AttrType.attrInterval) {
 			throw new KeyNotMatchException(null, "");
 		}
 
 		// TWO CASES:
-		
+
 		// 1. headerPage.root == INVALID_PAGE:
 		// - the tree is empty and we have to create a new first page;
 		// this page will be a leaf page
-		
+
 		// 2. headerPage.root != INVALID_PAGE:
 		// - we call _insert() to insert the pair (key, rid)
-		
+
 		if (trace != null) {
 			trace.writeBytes("INSERT " + rid.pageNo + " " + rid.slotNo + " " + key + lineSep);
 			trace.writeBytes("DO" + lineSep);
 			trace.flush();
 		}
-		
-		/*3. If header page's root ID says INVALID_PAGE */
+
+		/* 3. If header page's root ID says INVALID_PAGE */
 		// case 1
 		if (headerPage.get_rootId().pid == INVALID_PAGE) {
-			
+
 			PageId newRootPageId;
 			IntervalTLeafPage newRootPage;
 			RID dummyrid;
@@ -433,7 +600,8 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			}
 
 			/* 5. Set the previous as invalid and next as invalid as it's the only page. */
-			// root is the leaf page & the only page. so previous page is invalid, next page is invalid
+			// root is the leaf page & the only page. so previous page is invalid, next page
+			// is invalid
 			newRootPage.setNextPage(new PageId(INVALID_PAGE));
 			newRootPage.setPrevPage(new PageId(INVALID_PAGE));
 
@@ -457,7 +625,6 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 
 			return;
 		}
-		
 
 		// ASSERTIONS:
 		// - headerPageId, headerPage valid and pinned
@@ -468,7 +635,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			trace.writeBytes("SEARCH" + lineSep);
 			trace.flush();
 		}
-		
+
 		newRootEntry = _insert(key, rid, headerPage.get_rootId());
 	}
 
@@ -480,8 +647,9 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 		IntervalTSortedPage currentPage;
 		Page page;
 		KeyDataEntry upEntry;
-		
-		// pin the current page ID, headerPage.get_rootId() initially -- pin the header page
+
+		// pin the current page ID, headerPage.get_rootId() initially -- pin the header
+		// page
 		page = pinPage(currentPageId);
 		currentPage = new IntervalTSortedPage(page, headerPage.get_keyType());
 
@@ -511,7 +679,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			// two cases:
 			// - upEntry == null: one level lower no split has occurred:
 			// we are done.
-			
+
 			// - upEntry != null: one of the children has split and
 			// upEntry is the new data entry which has
 			// to be inserted on this index page
@@ -552,7 +720,8 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 
 			// we have to allocate a new INDEX page and
 			// to redistribute the index entries
-			newIndexPage = new IntervalTIndexPage(headerPage.get_keyType()); // allocate a new IntervalTIndexPage of type IntervalKey
+			newIndexPage = new IntervalTIndexPage(headerPage.get_keyType()); // allocate a new IntervalTIndexPage of
+																				// type IntervalKey
 			newIndexPageId = newIndexPage.getCurPage();
 
 			if (trace != null) {
@@ -689,7 +858,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 
 			IntervalTLeafPage newLeafPage;
 			PageId newLeafPageId;
-			
+
 			// we have to allocate a new LEAF page and
 			// to redistribute the data entries
 			newLeafPage = new IntervalTLeafPage(headerPage.get_keyType());
@@ -704,8 +873,8 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			PageId rightPageId;
 			rightPageId = newLeafPage.getNextPage();
 			if (rightPageId.pid != INVALID_PAGE) {
-				BTLeafPage rightPage;
-				rightPage = new BTLeafPage(rightPageId, headerPage.get_keyType());
+				IntervalTLeafPage rightPage;
+				rightPage = new IntervalTLeafPage(rightPageId, headerPage.get_keyType());
 
 				rightPage.setPrevPage(newLeafPageId);
 				unpinPage(rightPageId, true /* = DIRTY */);
@@ -747,7 +916,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 				newLeafPage.deleteSortedRecord(firstRid);
 			}
 
-			if (BT.keyCompare(key, undoEntry.key) < 0) {
+			if (IntervalT.keyCompare(key, undoEntry.key) < 0) {
 				// undo the final record
 				if (currentLeafPage.available_space() < newLeafPage.available_space()) {
 					newLeafPage.insertRecord(undoEntry.key, ((LeafData) undoEntry.data).getData());
@@ -761,7 +930,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			// will be inserted
 			// on the newly allocated or on the old leaf page
 
-			if (BT.keyCompare(key, undoEntry.key) >= 0) {
+			if (IntervalT.keyCompare(key, undoEntry.key) >= 0) {
 				// the new data entry belongs on the new Leaf page
 				newLeafPage.insertRecord(key, rid);
 
@@ -797,6 +966,24 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 		}
 	}
 	
+	/**
+	 * It causes a structured trace to be written to a file. This output is used to
+	 * drive a visualization tool that shows the inner workings of the b-tree during
+	 * its operations.
+	 * 
+	 * @param filename input parameter. The trace file name
+	 * @exception IOException error from the lower layer
+	 */
+	public static void traceFilename(String filename) throws IOException {
+
+		fos = new FileOutputStream(filename);
+		trace = new DataOutputStream(fos);
+	}
+	
+	public IntervalTreeHeaderPage getHeaderPage() {
+		return headerPage;
+	}
+
 	void trace_children(PageId id)
 			throws IOException, IteratorException, ConstructPageException, PinPageException, UnpinPageException {
 
@@ -830,7 +1017,7 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 		}
 
 	}
-	
+
 	/**
 	 * Close the B+ tree file. Unpin header page.
 	 * 
@@ -855,5 +1042,455 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 			ConstructPageException, DeleteRecException, IndexSearchException, IOException {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	
+	private KeyClass _Delete(KeyClass key, RID rid, PageId currentPageId, PageId parentPageId)
+			throws IndexInsertRecException, RedistributeException, IndexSearchException, RecordNotFoundException,
+			DeleteRecException, InsertRecException, LeafRedistributeException, IndexFullDeleteException,
+			FreePageException, LeafDeleteException, KeyNotMatchException, ConstructPageException, UnpinPageException,
+			IteratorException, PinPageException, IOException {
+
+		IntervalTSortedPage sortPage;
+		Page page;
+		page = pinPage(currentPageId);
+		sortPage = new IntervalTSortedPage(page, headerPage.get_keyType());
+
+		if (trace != null) {
+			trace.writeBytes("VISIT node " + currentPageId + lineSep);
+			trace.flush();
+		}
+
+		if (sortPage.getType() == NodeType.LEAF) {
+			RID curRid = new RID(); // iterator
+			KeyDataEntry tmpEntry;
+			KeyClass curkey;
+			RID dummyRid;
+			PageId nextpage;
+			IntervalTLeafPage leafPage;
+			leafPage = new IntervalTLeafPage(page, headerPage.get_keyType());
+
+			KeyClass deletedKey = key;
+			tmpEntry = leafPage.getFirst(curRid);
+
+			RID delRid;
+			// for all records with key equal to 'key', delete it if its rid = 'rid'
+			while ((tmpEntry != null) && (IntervalT.keyCompare(key, tmpEntry.key) >= 0)) {
+				// WriteUpdateLog is done in the btleafpage level - to log the
+				// deletion of the rid.
+
+				if (leafPage.delEntry(new KeyDataEntry(key, rid))) {
+					// successfully found <key, rid> on this page and deleted it.
+
+					if (trace != null) {
+						trace.writeBytes("TAKEFROM node " + leafPage.getCurPage() + lineSep);
+						trace.flush();
+					}
+
+					PageId leafPage_no = leafPage.getCurPage();
+					if ((4 + leafPage.available_space()) <= ((MAX_SPACE - HFPage.DPFIXED) / 2)) {
+						// the leaf page is at least half full after the deletion
+						unpinPage(leafPage.getCurPage(), true /* = DIRTY */);
+						return null;
+					} else if (leafPage_no.pid == headerPage.get_rootId().pid) {
+						// the tree has only one node - the root
+						if (leafPage.numberOfRecords() != 0) {
+							unpinPage(leafPage_no, true /* = DIRTY */);
+							return null;
+						} else {
+							// the whole tree is empty
+
+							if (trace != null) {
+								trace.writeBytes("DEALLOCATEROOT " + leafPage_no + lineSep);
+								trace.flush();
+							}
+
+							freePage(leafPage_no);
+
+							updateHeader(new PageId(INVALID_PAGE));
+							return null;
+						}
+					} else {
+						// get a sibling
+						IntervalTIndexPage parentPage;
+						parentPage = new IntervalTIndexPage(pinPage(parentPageId), headerPage.get_keyType());
+
+						PageId siblingPageId = new PageId();
+						IntervalTLeafPage siblingPage;
+						int direction;
+						direction = parentPage.getSibling(key, siblingPageId);
+
+						if (direction == 0) {
+							// there is no sibling. nothing can be done.
+
+							unpinPage(leafPage.getCurPage(), true /* =DIRTY */);
+
+							unpinPage(parentPageId);
+
+							return null;
+						}
+
+						siblingPage = new IntervalTLeafPage(pinPage(siblingPageId), headerPage.get_keyType());
+
+						if (siblingPage.redistribute(leafPage, parentPage, direction, deletedKey)) {
+							// the redistribution has been done successfully
+
+							if (trace != null) {
+
+								trace_children(leafPage.getCurPage());
+								trace_children(siblingPage.getCurPage());
+
+							}
+
+							unpinPage(leafPage.getCurPage(), true);
+							unpinPage(siblingPageId, true);
+							unpinPage(parentPageId, true);
+							return null;
+						} else if ((siblingPage.available_space()
+								+ 8 /* 2*sizeof(slot) */ ) >= ((MAX_SPACE - HFPage.DPFIXED)
+										- leafPage.available_space())) {
+
+							// we can merge these two children
+							// get old child entry in the parent first
+							KeyDataEntry oldChildEntry;
+							if (direction == -1)
+								oldChildEntry = leafPage.getFirst(curRid);
+							// get a copy
+							else {
+								oldChildEntry = siblingPage.getFirst(curRid);
+							}
+
+							// merge the two children
+							IntervalTLeafPage leftChild, rightChild;
+							if (direction == -1) {
+								leftChild = siblingPage;
+								rightChild = leafPage;
+							} else {
+								leftChild = leafPage;
+								rightChild = siblingPage;
+							}
+
+							// move all entries from rightChild to leftChild
+							RID firstRid = new RID(), insertRid;
+							for (tmpEntry = rightChild.getFirst(firstRid); tmpEntry != null; tmpEntry = rightChild
+									.getFirst(firstRid)) {
+								leftChild.insertRecord(tmpEntry);
+								rightChild.deleteSortedRecord(firstRid);
+							}
+
+							// adjust chain
+							leftChild.setNextPage(rightChild.getNextPage());
+							if (rightChild.getNextPage().pid != INVALID_PAGE) {
+								IntervalTLeafPage nextLeafPage = new IntervalTLeafPage(rightChild.getNextPage(),
+										headerPage.get_keyType());
+								nextLeafPage.setPrevPage(leftChild.getCurPage());
+								unpinPage(nextLeafPage.getCurPage(), true);
+							}
+
+							if (trace != null) {
+								trace.writeBytes("MERGE nodes " + leftChild.getCurPage() + " " + rightChild.getCurPage()
+										+ lineSep);
+								trace.flush();
+							}
+
+							unpinPage(leftChild.getCurPage(), true);
+
+							unpinPage(parentPageId, true);
+
+							freePage(rightChild.getCurPage());
+
+							return oldChildEntry.key;
+						} else {
+							// It's a very rare case when we can do neither
+							// redistribution nor merge.
+
+							unpinPage(leafPage.getCurPage(), true);
+
+							unpinPage(siblingPageId, true);
+
+							unpinPage(parentPageId, true);
+
+							return null;
+						}
+					} // get a sibling block
+				} // delete success block
+
+				nextpage = leafPage.getNextPage();
+				unpinPage(leafPage.getCurPage());
+
+				if (nextpage.pid == INVALID_PAGE)
+					throw new RecordNotFoundException(null, "");
+
+				leafPage = new IntervalTLeafPage(pinPage(nextpage), headerPage.get_keyType());
+				tmpEntry = leafPage.getFirst(curRid);
+
+			} // while loop
+
+			/*
+			 * We reached a page with first key > `key', so return an error. We should have
+			 * got true back from delUserRid above. Apparently the specified <key,rid> data
+			 * entry does not exist.
+			 */
+
+			unpinPage(leafPage.getCurPage());
+			throw new RecordNotFoundException(null, "");
+		}
+
+		if (sortPage.getType() == NodeType.INDEX) {
+			PageId childPageId;
+			IntervalTIndexPage indexPage = new IntervalTIndexPage(page, headerPage.get_keyType());
+			childPageId = indexPage.getPageNoByKey(key);
+
+			// now unpin the page, recurse and then pin it again
+			unpinPage(currentPageId);
+
+			KeyClass oldChildKey = _Delete(key, rid, childPageId, currentPageId);
+
+			// two cases:
+			// - oldChildKey == null: one level lower no merge has occurred:
+			// - oldChildKey != null: one of the children has been deleted and
+			// oldChildEntry is the entry to be deleted.
+
+			indexPage = new IntervalTIndexPage(pinPage(currentPageId), headerPage.get_keyType());
+
+			if (oldChildKey == null) {
+				unpinPage(indexPage.getCurPage(), true);
+				return null;
+			}
+
+			// delete the oldChildKey
+
+			// save possible old child entry before deletion
+			PageId dummyPageId;
+			KeyClass deletedKey = key;
+			RID curRid = indexPage.deleteKey(oldChildKey);
+
+			if (indexPage.getCurPage().pid == headerPage.get_rootId().pid) {
+				// the index page is the root
+				if (indexPage.numberOfRecords() == 0) {
+					IntervalTSortedPage childPage;
+					childPage = new IntervalTSortedPage(indexPage.getPrevPage(), headerPage.get_keyType());
+
+					if (trace != null) {
+						trace.writeBytes("CHANGEROOT from node " + indexPage.getCurPage() + " to node "
+								+ indexPage.getPrevPage() + lineSep);
+						trace.flush();
+					}
+
+					updateHeader(indexPage.getPrevPage());
+					unpinPage(childPage.getCurPage());
+
+					freePage(indexPage.getCurPage());
+					return null;
+				}
+				unpinPage(indexPage.getCurPage(), true);
+				return null;
+			}
+
+			// now we know the current index page is not a root
+			if ((4 /* sizeof slot */ + indexPage.available_space()) <= ((MAX_SPACE - HFPage.DPFIXED) / 2)) {
+				// the index page is at least half full after the deletion
+				unpinPage(currentPageId, true);
+
+				return null;
+			} else {
+				// get a sibling
+				IntervalTIndexPage parentPage;
+				parentPage = new IntervalTIndexPage(pinPage(parentPageId), headerPage.get_keyType());
+
+				PageId siblingPageId = new PageId();
+				IntervalTIndexPage siblingPage;
+				int direction;
+				direction = parentPage.getSibling(key, siblingPageId);
+				if (direction == 0) {
+					// there is no sibling. nothing can be done.
+
+					unpinPage(indexPage.getCurPage(), true);
+
+					unpinPage(parentPageId);
+
+					return null;
+				}
+
+				siblingPage = new IntervalTIndexPage(pinPage(siblingPageId), headerPage.get_keyType());
+
+				int pushKeySize = 0;
+				if (direction == 1) {
+					pushKeySize = IntervalT.getKeyLength(parentPage.findKey(siblingPage.getFirst(new RID()).key));
+				} else if (direction == -1) {
+					pushKeySize = IntervalT.getKeyLength(parentPage.findKey(indexPage.getFirst(new RID()).key));
+				}
+
+				if (siblingPage.redistribute(indexPage, parentPage, direction, deletedKey)) {
+					// the redistribution has been done successfully
+
+					if (trace != null) {
+
+						trace_children(indexPage.getCurPage());
+						trace_children(siblingPage.getCurPage());
+
+					}
+
+					unpinPage(indexPage.getCurPage(), true);
+
+					unpinPage(siblingPageId, true);
+
+					unpinPage(parentPageId, true);
+
+					return null;
+				} else if (siblingPage.available_space() + 4 /* slot size */ >= ((MAX_SPACE - HFPage.DPFIXED)
+						- (indexPage.available_space() + 4 /* slot size */) + pushKeySize + 4 /* slot size */
+						+ 4 /* pageId size */)) {
+
+					// we can merge these two children
+
+					// get old child entry in the parent first
+					KeyClass oldChildEntry;
+					if (direction == -1) {
+						oldChildEntry = indexPage.getFirst(curRid).key;
+					} else {
+						oldChildEntry = siblingPage.getFirst(curRid).key;
+					}
+
+					// merge the two children
+					IntervalTIndexPage leftChild, rightChild;
+					if (direction == -1) {
+						leftChild = siblingPage;
+						rightChild = indexPage;
+					} else {
+						leftChild = indexPage;
+						rightChild = siblingPage;
+					}
+
+					if (trace != null) {
+						trace.writeBytes(
+								"MERGE nodes " + leftChild.getCurPage() + " " + rightChild.getCurPage() + lineSep);
+						trace.flush();
+					}
+
+					// pull down the entry in its parent node
+					// and put it at the end of the left child
+					RID firstRid = new RID(), insertRid;
+					PageId curPageId;
+
+					leftChild.insertKey(parentPage.findKey(oldChildEntry), rightChild.getLeftLink());
+
+					// move all entries from rightChild to leftChild
+					for (KeyDataEntry tmpEntry = rightChild.getFirst(firstRid); tmpEntry != null; tmpEntry = rightChild
+							.getFirst(firstRid)) {
+						leftChild.insertKey(tmpEntry.key, ((IndexData) tmpEntry.data).getData());
+						rightChild.deleteSortedRecord(firstRid);
+					}
+
+					unpinPage(leftChild.getCurPage(), true);
+
+					unpinPage(parentPageId, true);
+
+					freePage(rightChild.getCurPage());
+
+					return oldChildEntry; // ???
+
+				} else {
+					// It's a very rare case when we can do neither
+					// redistribution nor merge.
+
+					unpinPage(indexPage.getCurPage(), true);
+
+					unpinPage(siblingPageId, true);
+
+					unpinPage(parentPageId);
+
+					return null;
+				}
+			}
+		} // index node
+		return null; // neither leaf and index page
+
+	}
+	
+	/*
+	 * Status BTreeFile::FullDelete (const void *key, const RID rid)
+	 *
+	 * Remove specified data entry (<key, rid>) from an index.
+	 *
+	 * Most work done recursively by _Delete
+	 *
+	 * Special case: delete root if the tree is empty
+	 *
+	 * Page containing first occurrence of key `key' is found for us After the page
+	 * containing first occurence of key 'key' is found, we iterate for (just a few)
+	 * pages, if necesary, to find the one containing <key,rid>, which we then
+	 * delete via BTLeafPage::delUserRid.
+	 * 
+	 * @return false if no such record; true if succees
+	 */
+
+	private boolean FullDelete(KeyClass key, RID rid)
+			throws IndexInsertRecException, RedistributeException, IndexSearchException, RecordNotFoundException,
+			DeleteRecException, InsertRecException, LeafRedistributeException, IndexFullDeleteException,
+			FreePageException, LeafDeleteException, KeyNotMatchException, ConstructPageException, IOException,
+			IteratorException, PinPageException, UnpinPageException, IteratorException {
+
+		try {
+
+			if (trace != null) {
+				trace.writeBytes("DELETE " + rid.pageNo + " " + rid.slotNo + " " + key + lineSep);
+				trace.writeBytes("DO" + lineSep);
+				trace.writeBytes("SEARCH" + lineSep);
+				trace.flush();
+			}
+
+			_Delete(key, rid, headerPage.get_rootId(), null);
+
+			if (trace != null) {
+				trace.writeBytes("DONE" + lineSep);
+				trace.flush();
+			}
+
+			return true;
+		} catch (RecordNotFoundException e) {
+			return false;
+		}
+
+	}
+	
+	/**
+	 * create a scan with given keys Cases: (1) lo_key = null, hi_key = null scan
+	 * the whole index (2) lo_key = null, hi_key!= null range scan from min to the
+	 * hi_key (3) lo_key!= null, hi_key = null range scan from the lo_key to max (4)
+	 * lo_key!= null, hi_key!= null, lo_key = hi_key exact match ( might not unique)
+	 * (5) lo_key!= null, hi_key!= null, lo_key < hi_key range scan from lo_key to
+	 * hi_key
+	 * 
+	 * @param lo_key the key where we begin scanning. Input parameter.
+	 * @param hi_key the key where we stop scanning. Input parameter.
+	 * @exception IOException            error from the lower layer
+	 * @exception KeyNotMatchException   key is not integer key nor string key
+	 * @exception IteratorException      iterator error
+	 * @exception ConstructPageException error in BT page constructor
+	 * @exception PinPageException       error when pin a page
+	 * @exception UnpinPageException     error when unpin a page
+	 */
+	public IntervalFileScan new_scan(KeyClass lo_key, KeyClass hi_key) throws IOException, KeyNotMatchException,
+			IteratorException, ConstructPageException, PinPageException, UnpinPageException
+
+	{
+		IntervalFileScan scan = new IntervalFileScan();
+		if (headerPage.get_rootId().pid == INVALID_PAGE) {
+			scan.leafPage = null;
+			return scan;
+		}
+
+		scan.treeFilename = dbname;
+		scan.endkey = hi_key;
+		scan.didfirst = false;
+		scan.deletedcurrent = false;
+		scan.curRid = new RID();
+		scan.keyType = headerPage.get_keyType();
+		scan.maxKeysize = headerPage.get_maxKeySize();
+		scan.ifile = this;
+
+		// this sets up scan at the starting position, ready for iteration
+		scan.leafPage = findRunStart(lo_key, scan.curRid);
+		return scan;
 	}
 }
