@@ -43,7 +43,7 @@ public class RunAllQueries {
         // xmlParser.BFSPrint();
         PCounter.initialize();
         
-		NestedQP1 query1 = new NestedQP1();
-		query1.QueryPlan1(patternTreePath);
+		QueryPlan1 query1 = new QueryPlan1();
+		query1.queryHandler(patternTreePath);
 	}
 }

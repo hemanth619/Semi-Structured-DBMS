@@ -11,12 +11,18 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
+import bufmgr.BufMgrException;
+import bufmgr.HashOperationException;
+import bufmgr.PageNotFoundException;
+import bufmgr.PagePinnedException;
+import bufmgr.PageUnpinnedException;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 //Define the XMLTuple schema
-class XMLTuple {
+ class XMLTuple {
 
     public IntervalType interval;
     public String tagName;
@@ -38,8 +44,19 @@ class XMLInsert implements GlobalConst {
     static XMLParser xmlParser = new XMLParser();
 
     /** Constructor
+     * @throws IOException 
+     * @throws BufMgrException 
+     * @throws PageNotFoundException 
+     * @throws PagePinnedException 
+     * @throws PageUnpinnedException 
+     * @throws HashOperationException 
+     * 
+     * 
      */
     public XMLInsert() {
+    	
+    }
+    public XMLInsert(String name) throws HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException, IOException {
 
         //build XMLTuple table
         xmlTuples  = new Vector();
@@ -144,6 +161,7 @@ class XMLInsert implements GlobalConst {
             }
         }
        // System.out.println(xmlParser.listOfXMLObjects.size());
+        SystemDefs.JavabaseBM.flushAllPages();
 
         if (status != OK) {
             //bail out
@@ -155,6 +173,8 @@ class XMLInsert implements GlobalConst {
 
     public void heapFileScan(String searchTagName) throws InvalidRelation, TupleUtilsException, FileScanException, IOException {
 
+    	String dbpath = "/tmp/"+System.getProperty("user.name")+".minibase.jointestdb";
+    	SystemDefs sysdef = new SystemDefs( dbpath, 0, 10000, "Clock" );
         // creating the sailors relation
         AttrType [] Stypes = new AttrType[2];
         Stypes[0] = new AttrType (AttrType.attrInterval);
@@ -214,12 +234,12 @@ class XMLInsert implements GlobalConst {
     }
 
 
-    public static void main(String argv[]) throws ParserConfigurationException, IOException, SAXException, TupleUtilsException, FileScanException, InvalidRelation {
+    public static void main(String argv[]) throws ParserConfigurationException, IOException, SAXException, TupleUtilsException, FileScanException, InvalidRelation, HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setValidating(false);
         DocumentBuilder db = dbf.newDocumentBuilder();
-        Document doc = db.parse(new FileInputStream(new File("xmldbTestXML/sample_data.xml")));
+        Document doc = db.parse(new FileInputStream(new File("/Users/akshayrao/git/dbmsiPhase2/javaminibase/src/xmldbTestXML/sample_data.xml")));
 
         Node root = doc.getDocumentElement();
 
@@ -234,8 +254,8 @@ class XMLInsert implements GlobalConst {
 
         // xmlParser.BFSPrint();
 
-        XMLInsert xmlinsert = new XMLInsert();
-        xmlinsert.heapFileScan("Org");
+        XMLInsert xmlinsert = new XMLInsert("");
+    //    xmlinsert.heapFileScan("Org");
 
     }
 }

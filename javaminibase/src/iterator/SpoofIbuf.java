@@ -110,6 +110,11 @@ public class SpoofIbuf implements GlobalConst  {
       return done;
     }
   
+  public void close() throws InvalidSlotNumberException, FileAlreadyDeletedException, InvalidTupleSizeException, HFBufMgrException, HFDiskMgrException, IOException {
+	  hf_scan.closescan();
+	  _fd.deleteFile();
+  }
+  
   /**
    *
    *@return the numbers of tuples in the buffer

@@ -18,6 +18,8 @@ public class AttrOperator {
   public static final int opRANGE = 8; //defined this way in C++
   public static final int aopPC = 9;
   public static final int aopCP = 10;
+  public static final int aopAD = 11;
+  
 
   public int attrOperator;
 
@@ -65,6 +67,8 @@ public class AttrOperator {
       return "aopPC";
     case aopCP:
       return "aopCP";
+    case aopAD:
+        return "aopAD";
 
     }
     return ("Unexpected AttrOperator " + attrOperator);

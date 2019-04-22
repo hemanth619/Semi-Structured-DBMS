@@ -180,7 +180,7 @@ public class XMLParser {
     		
     		if (nodeCount == 0)
     			break;
-    		System.out.println("Level: " + level);
+    		//System.out.println("Level: " + level);
     		
     		while (nodeCount > 0) {
     			XMLInputTreeNode node = queue.peek();
@@ -203,7 +203,7 @@ public class XMLParser {
     			nodeCount--;
     		}
     		
-    		System.out.println();
+    		//System.out.println();
     		level++;
     	}
     }

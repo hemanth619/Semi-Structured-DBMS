@@ -31,4 +31,13 @@ public class XMLInputTreeNode {
         children = new ArrayList<>();
         interval.setLevel(0);
     }
+    
+    public XMLInputTreeNode(String name, IntervalType _interval) {
+    	tagName = name;
+    	interval = _interval;
+    }
+    
+    public String toString() {	
+        return "TagName = " + tagName + " Start = " + interval.start + " End = " + interval.end+ " Level = " + interval.level;          
+    }
 }

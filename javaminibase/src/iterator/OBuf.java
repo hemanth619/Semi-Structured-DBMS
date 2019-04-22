@@ -19,7 +19,9 @@ public class OBuf implements GlobalConst{
    */
   public OBuf(){}     
   
-
+  public void close() throws InvalidSlotNumberException, FileAlreadyDeletedException, InvalidTupleSizeException, HFBufMgrException, HFDiskMgrException, IOException {
+	  _temp_fd.deleteFile();
+  }
 
   /**
    * O_buf is an output buffer. It takes as input:

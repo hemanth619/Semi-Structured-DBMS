@@ -247,6 +247,8 @@ public class PredEval
 						  if (comp_res == 10){ op_res = true;}
 						  else{op_res = false;}
 						  break;
+					  case AttrOperator.aopAD:
+						  if(comp_res == 2 || comp_res == 1 || comp_res == 9 || comp_res == 10) { op_res = true; }
 					  default:
 						  break;
 				  }

@@ -73,7 +73,8 @@ public class DB implements GlobalConst {
     
     name = new String(fname);
     num_pages = (num_pgs > 2) ? num_pgs : 2;
-    
+    PCounter.initialize();
+
     File DBfile = new File(name);
     
     DBfile.delete();
@@ -84,9 +85,8 @@ public class DB implements GlobalConst {
     // Make the file num_pages pages long, filled with zeroes.
     fp.seek((long)(num_pages*MINIBASE_PAGESIZE-1));
     fp.writeByte(0);
-    
     // Initialize space map and directory pages.
-    
+    PCounter.writeIncrement();
     // Initialize the first DB page
     Page apage = new Page();
     PageId pageId = new PageId();
@@ -149,12 +149,12 @@ public class DB implements GlobalConst {
     byte [] buffer = apage.getpage();  //new byte[MINIBASE_PAGESIZE];
     try{
       fp.read(buffer);
-     // PCounter.readIncrement(); //Increment the read count for the page
+      PCounter.readIncrement(); //Increment the read count for the page
     }
     catch (IOException e) {
       throw new FileIOException(e, "DB file I/O error");
     }
-    
+    PCounter.readIncrement();
   }
   
   /** Write the contents in a page object to the specified page.
@@ -179,7 +179,7 @@ public class DB implements GlobalConst {
     
     // Write the appropriate number of bytes.
     try{
-       // PCounter.writeIncrement(); //Increment the write count for the page
+        PCounter.writeIncrement(); //Increment the write count for the page
       fp.write(apage.getpage());
     }
     catch (IOException e) {

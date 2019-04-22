@@ -16,7 +16,23 @@ public class IntervalType {
 		this.end = -1;
 		this.level = 0;
 	}
-  
+
+	public IntervalType(int start, int end, int level) {
+		try {
+			if (start < MINIMUM || end > MAXIMUM) {
+				throw new Exception("limit exceeded");
+			}
+			this.start = start;
+			this.end = end;
+			this.level = level;
+		} catch (Exception e) {
+			this.start = 0;
+			this.end = 0;
+			this.level = -1;
+
+		}
+	}
+
 	public void assign(int start, int end, int level) {
 		try {
 			if (start < MINIMUM || end > MAXIMUM) {
