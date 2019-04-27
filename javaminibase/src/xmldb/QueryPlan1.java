@@ -156,7 +156,7 @@ class QueryPlan1 implements GlobalConst {
         
         //File Scan Operations
         //Reading 
-        File file = new File("/Users/akshayrao/git/dbmsiPhase2/javaminibase/src/xmldbTestXML/XMLQueryInput2.txt");
+        File file = new File(path);
         Scanner scan =new Scanner(file);
         
         //ArrayLists for storing tags and rules from input
@@ -519,8 +519,8 @@ class QueryPlan1 implements GlobalConst {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setValidating(false);
         DocumentBuilder db = dbf.newDocumentBuilder();
-        Document doc = db.parse(new FileInputStream(new File("/Users/akshayrao/git/dbmsiPhase2/javaminibase/src/xmldbTestXML/xml_sample_data.xml")));
-        String patternTreePath="/Users/akshayrao/git/dbmsiPhase2/javaminibase/src/xmldbTestXML/XMLQueryInput2.txt";
+        Document doc = db.parse(new FileInputStream(new File("/Users/akshayrao/git/dbmsiPhase2/javaminibase/src/xmldbTestXML/sample_data2.xml")));
+        String patternTreePath="/Users/akshayrao/git/dbmsiPhase2/javaminibase/src/xmldbTestXML/XMLQueryInput.txt";
         
         Node root = doc.getDocumentElement();
 
