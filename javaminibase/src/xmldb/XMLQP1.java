@@ -48,6 +48,8 @@ import iterator.FileScanException;
 import iterator.FldSpec;
 import iterator.InvalidRelation;
 import iterator.Iterator;
+import iterator.NestedLoopException;
+import iterator.NestedLoopsJoins;
 import iterator.Projection;
 import iterator.RelSpec;
 import iterator.TupleUtils;
@@ -157,6 +159,15 @@ public class XMLQP1 {
 				e.printStackTrace();
 			}
 		}
+		
+		//////////////////
+		
+		//SystemDefs.JavabaseDB.closeDB();
+		
+		
+		
+		
+		//////////////////
 		// System.out.println(xmlParser.listOfXMLObjects.size());
 		//		SystemDefs.JavabaseBM.flushAllPages();
 
@@ -886,8 +897,101 @@ public class XMLQP1 {
 		
 		return scan;
 	}
+	
+	public static void processQueries() throws HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException, IOException, HFException, HFBufMgrException, HFDiskMgrException, IndexException, FileScanException, TupleUtilsException, InvalidRelation, NestedLoopException, FieldNumberOutOfBoundException {
+		// A B OP -> firstTag lastTag aopAD/aopPC
+				String firstTag = "Entry";
+				String lastTag = "Mod";
+				String op = "AD"; //CP
 
-	public static void main(String[] args) throws FileNotFoundException, ParserConfigurationException, SAXException, IOException, HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException, HFException, HFBufMgrException, HFDiskMgrException, FileScanException, TupleUtilsException, InvalidRelation, IndexException {
+				qp1 = new XMLQP1();
+				qp1.xmlDataInsert();
+
+
+				FileScan scan = qp1.queryRuleIteratorScan(firstTag, lastTag, op, 1);
+				
+				String firstTag2 = "Entry";
+				String lastTag2 = "Org";
+				String op2 = "AD"; //CP
+				
+				String filename2 = qp1.queryRuleIteratorFile(firstTag2, lastTag2, op2, 2);
+				
+				AttrType[] ResultTypes = new AttrType[4];
+				ResultTypes[0] = new AttrType(AttrType.attrInterval);
+				ResultTypes[1] = new AttrType(AttrType.attrString);
+				ResultTypes[2] = new AttrType(AttrType.attrInterval);
+				ResultTypes[3] = new AttrType(AttrType.attrString);
+				
+				short[] resultSizes = new short[2];
+				resultSizes[0] = 10;
+				resultSizes[1] = 10;
+				
+				FldSpec[] resultProjlist = new FldSpec[6];
+				resultProjlist[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+				resultProjlist[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+				resultProjlist[2] = new FldSpec(new RelSpec(RelSpec.outer), 3);
+				resultProjlist[3] = new FldSpec(new RelSpec(RelSpec.outer), 4);
+				resultProjlist[4] = new FldSpec(new RelSpec(RelSpec.innerRel), 3);
+				resultProjlist[5] = new FldSpec(new RelSpec(RelSpec.innerRel), 4);
+				
+				CondExpr[] condExpr = new CondExpr[2];
+				condExpr[0] = new CondExpr();
+				condExpr[0].type1 = new AttrType(AttrType.attrSymbol);
+				condExpr[0].type2 = new AttrType(AttrType.attrSymbol);
+				condExpr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),2);
+				condExpr[0].operand2.symbol = new FldSpec(new RelSpec(RelSpec.innerRel),2);
+				condExpr[0].op = new AttrOperator(AttrOperator.aopEQ);
+				condExpr[0].next = null;
+				condExpr[1] = null;
+				
+				NestedLoopsJoins nlj = new NestedLoopsJoins(ResultTypes, 4, resultSizes, ResultTypes, 4, resultSizes, 10, scan, filename2, condExpr, null, resultProjlist, 6);
+				
+				Tuple t = null;
+		
+				try {
+					t = nlj.get_next();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}	
+				while(t!=null) {
+//					String outval;
+//					IntervalType intervalResult;
+//					String outval2;
+//					IntervalType intervalResult2;
+//					try {
+//						outval = t.getStrFld(2);
+//						intervalResult = t.getIntervalFld(1);
+//						outval2 = t.getStrFld(4);
+//						intervalResult2 = t.getIntervalFld(3);
+//						System.out.print("TagName = " + outval + " Start = " + intervalResult.start + " End = " + intervalResult.end + " Level = " + intervalResult.level);
+//						System.out.println("|| TagName = " + outval2 + " Start = " + intervalResult2.start + " End = " + intervalResult2.end + " Level = " + intervalResult2.level);
+//		
+//					} catch (Exception e) {
+//						
+//						e.printStackTrace();
+//					}
+					
+					for(int i=1; i<6; i = i+2) {
+						String outval;
+						IntervalType intervalResult;
+						outval = t.getStrFld(i+1);
+						intervalResult = t.getIntervalFld(i);
+						System.out.print("| TagName = " + outval + " Start = " + intervalResult.start + " End = " + intervalResult.end + " Level = " + intervalResult.level);
+						
+					}
+					System.out.println();
+					try {
+						t = nlj.get_next();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				
+				
+				
+	}
+
+	public static void main(String[] args) throws FileNotFoundException, ParserConfigurationException, SAXException, IOException, HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException, HFException, HFBufMgrException, HFDiskMgrException, FileScanException, TupleUtilsException, InvalidRelation, IndexException, NestedLoopException, FieldNumberOutOfBoundException {
 
 
 		System.out.println("XMLQP1");
@@ -901,48 +1005,39 @@ public class XMLQP1 {
 		xmlParser.build(root);
 		xmlParser.preOrder(xmlParser.tree.root);
 		xmlParser.BFSSetLevel();
-
-		// A B OP -> firstTag lastTag aopAD/aopPC
-		String firstTag = "root";
-		String lastTag = "Entry";
-		String op = "AD"; //CP
-
-		qp1 = new XMLQP1();
-		qp1.xmlDataInsert();
-
-
-		FileScan scan = qp1.queryRuleIteratorScan(firstTag, lastTag, op, 1);
+		processQueries();
 		
-		Tuple t = null;
-
-		try {
-			t = scan.get_next();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}	
-		while(t!=null) {
-			String outval;
-			IntervalType intervalResult;
-			String outval2;
-			IntervalType intervalResult2;
-			try {
-				outval = t.getStrFld(2);
-				intervalResult = t.getIntervalFld(1);
-				outval2 = t.getStrFld(4);
-				intervalResult2 = t.getIntervalFld(3);
-				System.out.print("TagName = " + outval + " Start = " + intervalResult.start + " End = " + intervalResult.end + " Level = " + intervalResult.level);
-				System.out.println("|| TagName = " + outval2 + " Start = " + intervalResult2.start + " End = " + intervalResult2.end + " Level = " + intervalResult2.level);
-
-			} catch (Exception e) {
-				
-				e.printStackTrace();
-			}
-			try {
-				t = scan.get_next();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+		
+//		Tuple t = null;
+//
+//		try {
+//			t = scan.get_next();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}	
+//		while(t!=null) {
+//			String outval;
+//			IntervalType intervalResult;
+//			String outval2;
+//			IntervalType intervalResult2;
+//			try {
+//				outval = t.getStrFld(2);
+//				intervalResult = t.getIntervalFld(1);
+//				outval2 = t.getStrFld(4);
+//				intervalResult2 = t.getIntervalFld(3);
+//				System.out.print("TagName = " + outval + " Start = " + intervalResult.start + " End = " + intervalResult.end + " Level = " + intervalResult.level);
+//				System.out.println("|| TagName = " + outval2 + " Start = " + intervalResult2.start + " End = " + intervalResult2.end + " Level = " + intervalResult2.level);
+//
+//			} catch (Exception e) {
+//				
+//				e.printStackTrace();
+//			}
+//			try {
+//				t = scan.get_next();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
 
 
 	}
