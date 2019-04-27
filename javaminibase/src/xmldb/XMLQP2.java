@@ -1158,6 +1158,7 @@ public class XMLQP2 {
 			}
 		}
 
+		System.out.println("Inserted into the heapfile successfully...");
 		return heapFileName;
 	}
 	
@@ -1204,6 +1205,20 @@ public class XMLQP2 {
 		System.out.println("Total Records: " + counter);
 	}
 	
+	public void reinitialize() {
+		OK = true;
+		FAIL = false;
+		status = OK;
+		currentInstanceIndex = 1;
+		currentTagIndex = 1; // Used in the hashmap
+		
+	    colLength = 0;
+	    currentProjCount = 6;
+	    
+		sortedRules = new ArrayList<ArrayList<String>>();
+	    tagIndex = new HashMap<>();
+	}
+	
 	public void QP2Wrapper() throws HFException, HFBufMgrException, HFDiskMgrException, IndexException, FileScanException, TupleUtilsException, InvalidRelation, IOException {
 		
 		// PATTERN TREE 1
@@ -1211,77 +1226,42 @@ public class XMLQP2 {
     	ArrayList<ArrayList<String>> sortedRules = this.wrapperForSortedRules("XMLPatternTree1");
     	
     	// populate first two sort merge instances
-    	FileScan it1 = this.queryRuleIteratorScan(sortedRules.get(0).get(0), sortedRules.get(0).get(1), sortedRules.get(0).get(2), 1, "ONE");
-    	FileScan it2 = this.queryRuleIteratorScan(sortedRules.get(1).get(0), sortedRules.get(1).get(1), sortedRules.get(1).get(2), 2, "ONE");
+    	FileScan it11 = this.queryRuleIteratorScan(sortedRules.get(0).get(0), sortedRules.get(0).get(1), sortedRules.get(0).get(2), 1, "ONE");
+    	FileScan it12 = this.queryRuleIteratorScan(sortedRules.get(1).get(0), sortedRules.get(1).get(1), sortedRules.get(1).get(2), 2, "ONE");
     	
     	
     	// execute the query plan for the first pattern tree
-    	SortMerge2 patternTreeOneIterator = this.executeQP2ForAPatternTree(it1, it2, "ONE");
+    	SortMerge2 patternTreeOneIterator = this.executeQP2ForAPatternTree(it11, it12, "ONE");
+    	
+    	// Print Results for pattern tree 1
     	this.printResultsOfPatternTree(patternTreeOneIterator);
     	
-//    	// PATTERN TREE 2
-//    	// get the sorted rules
-//    	sortedRules = this.wrapperForSortedRules("XMLPatternTree2");
-//    	
-//    	// populate the first two sort merge instances
-//    	it1 = this.queryRuleIteratorScan(sortedRules.get(0).get(0), sortedRules.get(0).get(1), sortedRules.get(0).get(2), 1, "ONE");
-//    	it2 = this.queryRuleIteratorScan(sortedRules.get(1).get(0), sortedRules.get(1).get(1), sortedRules.get(1).get(2), 2, "ONE");
-//    	
-//    	// execute the query plan for the second pattern tree    	
-//    	SortMerge2 patternTreeTwoIterator = this.executeQP2ForAPatternTree(it1, it2, "TWO");
-//    	
-//    	// Print Results for pattern tree 1
-//    	// Print Results for pattern tree 2
-//    	this.printResulsFromAPatternTree(it);
+    	// write the results into a heap file
+    	this.insertResultsIntoHeapFile("patternTree1Results", patternTreeOneIterator);
     	
-    	Iterator it = patternTreeOneIterator;
-				
-//		Tuple t = null;
-//
-//		try {
-//			t = it.get_next();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}	
-//		
-//		int counter = 0;
-//		while(t!=null) {
-//			String outval;
-//			IntervalType intervalResult;
-//			String outval2;
-//			IntervalType intervalResult2;
-//			String outval3;
-//			IntervalType intervalResult3;
-//			
-//			try {
-//				outval = t.getStrFld(2);
-//				intervalResult = t.getIntervalFld(1);
-//				outval2 = t.getStrFld(4);
-//				intervalResult2 = t.getIntervalFld(3);
-//				intervalResult3 = t.getIntervalFld(5);
-//				outval3 = t.getStrFld(6);
-//				
-//				System.out.print("TagName = " + outval + " Start = " + intervalResult.start + " End = " + intervalResult.end + " Level = " + intervalResult.level);
-//				System.out.print("|| TagName = " + outval2 + " Start = " + intervalResult2.start + " End = " + intervalResult2.end + " Level = " + intervalResult2.level);
-//				System.out.println("|| TagName = " + outval3 + " Start = " + intervalResult3.start + " End = " + intervalResult3.end + " Level = " + intervalResult3.level);
-//				counter++;
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//			try {
-//				t = it.get_next();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
+    	/* PATTERN TREE 2 */
+    	// get the sorted rules
+    	this.reinitialize();
     	
-//		System.out.println("Total Records: " + counter);
-    	// execute the query plan for the second pattern tree
+    	System.out.println("Pattern Tree 2...");
+    	sortedRules = new ArrayList<ArrayList<String>>();
     	
-//    	for(int i=0; i<sortedRules.size(); i++){
-//    		this.QP3(sortedRules.get(i).get(0), sortedRules.get(i).get(1), sortedRules.get(i).get(2));
-//        }
+    	sortedRules = this.wrapperForSortedRules("XMLPatternTree2");
     	
+    	System.out.println(sortedRules);
+    	    	
+    	// populate the first two sort merge instances
+    	FileScan it21 = this.queryRuleIteratorScan(sortedRules.get(0).get(0), sortedRules.get(0).get(1), sortedRules.get(0).get(2), 1, "TWO");
+    	FileScan it22 = this.queryRuleIteratorScan(sortedRules.get(1).get(0), sortedRules.get(1).get(1), sortedRules.get(1).get(2), 2, "TWO");
+    	
+    	// execute the query plan for the second pattern tree    	
+    	SortMerge2 patternTreeTwoIterator = this.executeQP2ForAPatternTree(it21, it22, "TWO");
+    	
+    	// Print Results for pattern tree 2
+    	this.printResultsOfPatternTree(patternTreeTwoIterator);
+    	
+    	// write the results into a heap file
+    	this.insertResultsIntoHeapFile("patternTree2Results", patternTreeTwoIterator);
 	}
 	
 	public SortMerge2 executeQP2ForAPatternTree(FileScan it1, FileScan it2, String fileNamePrefix) throws HFException, HFBufMgrException, HFDiskMgrException, IndexException, FileScanException, TupleUtilsException, InvalidRelation, IOException {
@@ -1426,7 +1406,6 @@ public class XMLQP2 {
             tempInstance2 = tempInstance;
             
             it = this.queryRuleIteratorScan(sortedRules.get(index).get(0), sortedRules.get(index).get(1), sortedRules.get(index).get(2), index+1, fileNamePrefix);
-            // smInstance = this.SMJQPMixed(tempInstance, it2);  
             
             System.out.println("Column length: " + projectionList2.length);
             
@@ -1444,36 +1423,6 @@ public class XMLQP2 {
     	}
     	
     	return tempInstance;
-    	
-//    	boolean done = false;
-//        Tuple t = null;
-//        HashSet<String> tupleSet = new HashSet<>();
-//        try{
-//            while(!done){
-//                t = tempInstance.get_next();
-//                if(t == null) {
-//                    done = true;
-//                    break;
-//                }
-//                
-//               String res = "";
-//                for (int k=1; k<=colLength; k++) {
-//                	if(k%2 != 0) {
-//                		res += " | Start = " + t.getIntervalFld(k).getStart() + " End = " + t.getIntervalFld(k).getEnd() + " Level = " + t.getIntervalFld(k).getLevel();
-////                		System.out.print(" | Start = " + t.getIntervalFld(k).getStart() + " End = " + t.getIntervalFld(k).getEnd() + " Level = " + t.getIntervalFld(k).getLevel());
-//                	}else {
-//                		res += " TagName = " + t.getStrFld(k);
-////                		System.out.print(" TagName = " + t.getStrFld(k) );
-//                	}
-//                           
-//                }
-////                System.out.println();
-//                globalResults.add(res);
-//            }
-//            
-//        } catch(Exception e){
-//            e.printStackTrace();
-//        }
 	}
 
 	public static void main(String[] args) throws FileNotFoundException, ParserConfigurationException, SAXException, IOException, HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException, HFException, HFBufMgrException, HFDiskMgrException, FileScanException, TupleUtilsException, InvalidRelation, IndexException {
@@ -1491,62 +1440,9 @@ public class XMLQP2 {
 		xmlParser.preOrder(xmlParser.tree.root);
 		xmlParser.BFSSetLevel();
 
-		// A B OP -> firstTag lastTag aopAD/aopPC
-		String firstTag = "root";
-		String lastTag = "Entry";
-		String op = "AD"; //CP
-
 		qp2 = new XMLQP2();
 		qp2.xmlDataInsert();
 
 		qp2.QP2Wrapper();
-
-//		FileScan scan = qp2.queryRuleIteratorScan(firstTag, lastTag, op, 1);
-//		
-//		firstTag = "root";
-//		lastTag = "Mod";
-//		op = "AD";
-//		
-//		FileScan scan2 = qp2.queryRuleIteratorScan(firstTag, lastTag, op, 2);
-//		
-//		Iterator it = qp2.SMJQP(scan, scan2);
-//		
-//		// Iterator it = scan2;
-//		
-//		Tuple t = null;
-//
-//		try {
-//			t = it.get_next();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}	
-//		while(t!=null) {
-//			String outval;
-//			IntervalType intervalResult;
-//			String outval2;
-//			IntervalType intervalResult2;
-//			String outval3;
-//			IntervalType intervalResult3;
-//			
-//			try {
-//				outval = t.getStrFld(2);
-//				intervalResult = t.getIntervalFld(1);
-//				outval2 = t.getStrFld(4);
-//				intervalResult2 = t.getIntervalFld(3);
-//				intervalResult3 = t.getIntervalFld(5);
-//				outval3 = t.getStrFld(6);
-//				
-//				System.out.print("TagName = " + outval + " Start = " + intervalResult.start + " End = " + intervalResult.end + " Level = " + intervalResult.level);
-//				System.out.print("|| TagName = " + outval2 + " Start = " + intervalResult2.start + " End = " + intervalResult2.end + " Level = " + intervalResult2.level);
-//				System.out.println("|| TagName = " + outval3 + " Start = " + intervalResult3.start + " End = " + intervalResult3.end + " Level = " + intervalResult3.level);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//			try {
-//				t = it.get_next();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
 	}
 }
