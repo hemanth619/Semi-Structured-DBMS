@@ -5,9 +5,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
-
+import java.util.Queue;
+import java.util.Scanner;
 import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -49,6 +52,7 @@ import iterator.FileScanException;
 import iterator.FldSpec;
 import iterator.InvalidRelation;
 import iterator.Iterator;
+import iterator.NestedLoopsJoins;
 import iterator.Projection;
 import iterator.RelSpec;
 import iterator.SortMerge2;
@@ -64,6 +68,15 @@ public class XMLQP2 {
 	private Vector<XMLTuple> xmlTuples;
 	static XMLParser xmlParser = new XMLParser();
 	static XMLQP2 qp2;
+	
+    static int currentInstanceIndex = 1;
+	static int currentTagIndex = 1; // Used in the hashmap
+	
+    private static int colLength = 0;
+    static int currentProjCount = 6;
+	
+	ArrayList<ArrayList<String>> sortedRules;
+    HashMap<String, Integer> tagIndex = new HashMap<>();
 
 	public void xmlDataInsert() throws HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException, IOException {
 
@@ -723,10 +736,10 @@ public class XMLQP2 {
 	 * op -> AD/PC
 	 * fileCounter -> unique number used to create unique filenames for each rule. Please ensure you pass some unique rule
 	 * */
-	public String queryRuleIteratorFile(String firstTag, String lastTag, String op, int fileCounter) throws HFException, HFBufMgrException, HFDiskMgrException, IOException, FileScanException, TupleUtilsException, InvalidRelation, IndexException {
+	public String queryRuleIteratorFile(String firstTag, String lastTag, String op, int fileCounter, String prefix) throws HFException, HFBufMgrException, HFDiskMgrException, IOException, FileScanException, TupleUtilsException, InvalidRelation, IndexException {
 		IndexScan iscan = qp2.indexTagSearch(firstTag);
 		
-		String filename = "singlequeryresults" + fileCounter + ".in";
+		String filename = "singlequeryresults" + prefix + fileCounter + ".in";
 		Heapfile f = null;
 		try {
 			f = new Heapfile(filename);
@@ -854,10 +867,10 @@ public class XMLQP2 {
 
 	}
 
-	public FileScan queryRuleIteratorScan(String firstTag, String lastTag, String op, int fileCounter) throws HFException, HFBufMgrException, HFDiskMgrException, IOException, IndexException, FileScanException, TupleUtilsException, InvalidRelation {
+	public FileScan queryRuleIteratorScan(String firstTag, String lastTag, String op, int fileCounter, String prefix) throws HFException, HFBufMgrException, HFDiskMgrException, IOException, IndexException, FileScanException, TupleUtilsException, InvalidRelation {
 		
 		
-		String filename = queryRuleIteratorFile(firstTag, lastTag, op, fileCounter);
+		String filename = queryRuleIteratorFile(firstTag, lastTag, op, fileCounter, prefix);
 		Heapfile f = null;
 		try {
 			f = new Heapfile(filename);
@@ -944,43 +957,211 @@ public class XMLQP2 {
         
         return tempInstance;
 	}
+	
+	public SortMerge2 SMJQPMixed(SortMerge2 it1, FileScan it2) {
+        
+        AttrType [] Stypes = new AttrType[4];
+        Stypes[0] = new AttrType (AttrType.attrInterval);
+        Stypes[1] = new AttrType (AttrType.attrString);
+        Stypes[2] = new AttrType (AttrType.attrInterval);
+        Stypes[3] = new AttrType (AttrType.attrString);
+        
+        short [] Ssizes = new short[2];
+        Ssizes[0] = 10;
+        Ssizes[1] = 10;
+        
 
-	public static void main(String[] args) throws FileNotFoundException, ParserConfigurationException, SAXException, IOException, HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException, HFException, HFBufMgrException, HFDiskMgrException, FileScanException, TupleUtilsException, InvalidRelation, IndexException {
+//        AttrType [] Stypes2 = new AttrType[2];
+//        Stypes2[0] = new AttrType (AttrType.attrInterval);
+//        Stypes2[1] = new AttrType (AttrType.attrString);
+
+        FldSpec [] projectionList = new FldSpec[6];
+        projectionList[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        projectionList[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+        projectionList[2] = new FldSpec(new RelSpec(RelSpec.outer), 3);
+        projectionList[3] = new FldSpec(new RelSpec(RelSpec.outer), 4);
+        projectionList[4] = new FldSpec(new RelSpec(RelSpec.innerRel), 3);
+        projectionList[5] = new FldSpec(new RelSpec(RelSpec.innerRel), 4);
+        
+        
+        
+        TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
+        SortMerge2 tempInstance = null;
+        
+    	CondExpr[] expr = new CondExpr[2];
+    	expr[0] = new CondExpr();
+        expr[1] = null;
+        expr[0].next  = null;
+
+        expr[0].op = new AttrOperator(AttrOperator.aopEQ);
+        
+        expr[0].type1 = new AttrType(AttrType.attrSymbol);
+        expr[0].type2 = new AttrType(AttrType.attrSymbol);
+        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),1);
+        expr[0].operand2.symbol = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+        expr[0].flag = 1;       
+        
+        try {
+            tempInstance = new SortMerge2(Stypes, 4, Ssizes, Stypes, 4, Ssizes, 1, 12, 1, 12, 10, it1, it2, false, false, ascending, expr, projectionList, 6);
+        }
+        catch (Exception e) {
+            System.err.println("*** join error in SortMerge constructor ***");
+            status = FAIL;
+            System.err.println (""+e);
+            e.printStackTrace();
+        }
+        
+        return tempInstance;
+	}
+	
+	public static ArrayList<ArrayList<String>> getSortedRules(ArrayList<String> tags, ArrayList<ArrayList<String>> rules){
+        ArrayList<Integer> isRuleVisited = new ArrayList<>();
+        ArrayList<Integer> isTagVisited = new ArrayList<>();
+        ArrayList<ArrayList<String>> sortedRules = new ArrayList<ArrayList<String>>();
+        Queue<String> q = new LinkedList<>();
+
+        //Mark all rules as unvisited first
+        for(int i=0; i<rules.size(); i++){
+            isRuleVisited.add(0);
+        }
+        // isRuleVisited.set(0,1);
+        for(int i=0; i<tags.size(); i++){
+            isTagVisited.add(0);
+        }
+
+        ((LinkedList<String>) q).add(rules.get(0).get(0));
+        ((LinkedList<String>) q).add(rules.get(0).get(1));
+        isTagVisited.set(tags.indexOf(rules.get(0).get(0)), 1);
+        // isTagVisited.set(tags.indexOf(rules.get(0).get(1)), 1);
 
 
-		System.out.println("XMLQP2");
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		dbf.setValidating(false);
-		DocumentBuilder db = dbf.newDocumentBuilder();
-		Document doc = db.parse(new FileInputStream(new File("/home/ronak/DBMSi Project/Phase3/dbmsiPhase2/javaminibase/src/xmldbTestXML/xml_sample_data.xml")));
+        while(q.size() != 0){
+            String tag = q.remove();
+            isTagVisited.set(tags.indexOf(tag),1);
+            for(int i = 0; i< rules.size(); i++){
+                if(isRuleVisited.get(i) == 0){
 
-		Node root = doc.getDocumentElement();
+                    if(rules.get(i).get(0).equals(tag)){
+                        isRuleVisited.set(i, 1);
+                        sortedRules.add(rules.get(i));
+                        if(isTagVisited.get(tags.indexOf(tag)) == 0){
+                            q.add(tag);
 
-		xmlParser.build(root);
-		xmlParser.preOrder(xmlParser.tree.root);
-		xmlParser.BFSSetLevel();
+                        }
+                        if(isTagVisited.get(tags.indexOf(rules.get(i).get(1))) == 0){
+                            q.add(rules.get(i).get(1));
+                        }
 
-		// A B OP -> firstTag lastTag aopAD/aopPC
-		String firstTag = "root";
-		String lastTag = "Entry";
-		String op = "AD"; //CP
+                    }
+                    if(rules.get(i).get(1).equals(tag)){
+                        isRuleVisited.set(i, 1);
+                        sortedRules.add(rules.get(i));
+                        if(isTagVisited.get(tags.indexOf(tag)) == 0){
+                            q.add(tag);
+                        }
+                        if(isTagVisited.get(tags.indexOf(rules.get(i).get(0))) == 0){
+                            q.add(rules.get(i).get(0));
+                        }
 
-		qp2 = new XMLQP2();
-		qp2.xmlDataInsert();
+                    }
+                }
+            }
+        }
 
 
-		FileScan scan = qp2.queryRuleIteratorScan(firstTag, lastTag, op, 1);
-		
-		firstTag = "root";
-		lastTag = "Mod";
-		op = "AD";
-		
-		FileScan scan2 = qp2.queryRuleIteratorScan(firstTag, lastTag, op, 2);
-		
-		Iterator it = qp2.SMJQP(scan, scan2);
-		
-		// Iterator it = scan2;
-		
+
+        return sortedRules;
+    }
+    
+    public ArrayList<ArrayList<String>> wrapperForSortedRules(String fileName) {
+    	// assume this reads the query file, and produces a list of tag names
+    	try{
+            File file = new File("/home/ronak/DBMSi Project/Phase3/dbmsiPhase2/javaminibase/src/xmldbTestXML/" + fileName + ".txt");
+            Scanner scan =new Scanner(file);
+
+            ArrayList<String> tags = new ArrayList<>();
+            ArrayList<ArrayList<String>> rules = new ArrayList<ArrayList<String>>();
+
+
+            //Scan numberoftags, tags and rules from file
+            int numberOfTags = scan.nextInt();
+            for(int i=0; i<numberOfTags; i++){
+                String tag = scan.next();
+                if(tag.length() > 5)
+                    tag = tag.substring(0,5);
+                tags.add(tag);
+                //  System.out.println(tags.get(i));
+            }
+            int j = 0;
+            while(scan.hasNext()){
+                ArrayList<String> temp = new ArrayList<>();
+                int leftTag = scan.nextInt();
+                int rightTag = scan.nextInt();
+                String relation = scan.next();
+                //System.out.println(leftTag + " " + rightTag + " " + relation);
+                temp.add(tags.get(leftTag-1));
+                temp.add(tags.get(rightTag-1));
+                temp.add(relation);
+                //   System.out.println(temp.get(0) + " " + temp.get(1) + " " + temp.get(2));
+                rules.add(temp);
+
+            }
+            ArrayList<String> reversedtags = new ArrayList<>();
+            for(int i= tags.size()-1; i >=0; i--){
+                reversedtags.add(tags.get(i));
+            }
+
+            ArrayList<ArrayList<String>> reversedRules = new ArrayList<ArrayList<String>>();
+            for(int i = rules.size()-1; i >= 0; i--) {
+                reversedRules.add(rules.get(i));
+            }
+
+            sortedRules = XMLQueryParsing.getSortedRules(tags, rules);
+            return sortedRules;
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	}
+    	return new ArrayList<ArrayList<String>>();
+    }
+    
+	public String insertResultsIntoHeapFile(String fileName, Iterator it) {
+		Heapfile f = null;
+
+		String heapFileName = fileName + ".in";
+		try {
+			f = new Heapfile(heapFileName);
+		} catch (Exception e) {
+			System.err.println("*** error in Heapfile constructor ***");
+			status = FAIL;
+			e.printStackTrace();
+		}
+
+		Tuple t = null;
+		try {
+			t = it.get_next();
+		} catch (Exception e) {
+			status = FAIL;
+			e.printStackTrace();
+		}
+
+		while (t != null) {
+			try {
+				f.insertRecord(t.returnTupleByteArray());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			try {
+				t = it.get_next();
+			} catch (Exception e) {
+				status = FAIL;
+				e.printStackTrace();
+			}
+		}
+
+		return heapFileName;
+	}
+	
+	public void printResultsOfPatternTree(Iterator it) {
 		Tuple t = null;
 
 		try {
@@ -988,6 +1169,8 @@ public class XMLQP2 {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}	
+		
+		int counter = 0;
 		while(t!=null) {
 			String outval;
 			IntervalType intervalResult;
@@ -1007,6 +1190,7 @@ public class XMLQP2 {
 				System.out.print("TagName = " + outval + " Start = " + intervalResult.start + " End = " + intervalResult.end + " Level = " + intervalResult.level);
 				System.out.print("|| TagName = " + outval2 + " Start = " + intervalResult2.start + " End = " + intervalResult2.end + " Level = " + intervalResult2.level);
 				System.out.println("|| TagName = " + outval3 + " Start = " + intervalResult3.start + " End = " + intervalResult3.end + " Level = " + intervalResult3.level);
+				counter++;
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1016,5 +1200,353 @@ public class XMLQP2 {
 				e.printStackTrace();
 			}
 		}
+		
+		System.out.println("Total Records: " + counter);
+	}
+	
+	public void QP2Wrapper() throws HFException, HFBufMgrException, HFDiskMgrException, IndexException, FileScanException, TupleUtilsException, InvalidRelation, IOException {
+		
+		// PATTERN TREE 1
+		// get the sorted rules
+    	ArrayList<ArrayList<String>> sortedRules = this.wrapperForSortedRules("XMLPatternTree1");
+    	
+    	// populate first two sort merge instances
+    	FileScan it1 = this.queryRuleIteratorScan(sortedRules.get(0).get(0), sortedRules.get(0).get(1), sortedRules.get(0).get(2), 1, "ONE");
+    	FileScan it2 = this.queryRuleIteratorScan(sortedRules.get(1).get(0), sortedRules.get(1).get(1), sortedRules.get(1).get(2), 2, "ONE");
+    	
+    	
+    	// execute the query plan for the first pattern tree
+    	SortMerge2 patternTreeOneIterator = this.executeQP2ForAPatternTree(it1, it2, "ONE");
+    	this.printResultsOfPatternTree(patternTreeOneIterator);
+    	
+//    	// PATTERN TREE 2
+//    	// get the sorted rules
+//    	sortedRules = this.wrapperForSortedRules("XMLPatternTree2");
+//    	
+//    	// populate the first two sort merge instances
+//    	it1 = this.queryRuleIteratorScan(sortedRules.get(0).get(0), sortedRules.get(0).get(1), sortedRules.get(0).get(2), 1, "ONE");
+//    	it2 = this.queryRuleIteratorScan(sortedRules.get(1).get(0), sortedRules.get(1).get(1), sortedRules.get(1).get(2), 2, "ONE");
+//    	
+//    	// execute the query plan for the second pattern tree    	
+//    	SortMerge2 patternTreeTwoIterator = this.executeQP2ForAPatternTree(it1, it2, "TWO");
+//    	
+//    	// Print Results for pattern tree 1
+//    	// Print Results for pattern tree 2
+//    	this.printResulsFromAPatternTree(it);
+    	
+    	Iterator it = patternTreeOneIterator;
+				
+//		Tuple t = null;
+//
+//		try {
+//			t = it.get_next();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}	
+//		
+//		int counter = 0;
+//		while(t!=null) {
+//			String outval;
+//			IntervalType intervalResult;
+//			String outval2;
+//			IntervalType intervalResult2;
+//			String outval3;
+//			IntervalType intervalResult3;
+//			
+//			try {
+//				outval = t.getStrFld(2);
+//				intervalResult = t.getIntervalFld(1);
+//				outval2 = t.getStrFld(4);
+//				intervalResult2 = t.getIntervalFld(3);
+//				intervalResult3 = t.getIntervalFld(5);
+//				outval3 = t.getStrFld(6);
+//				
+//				System.out.print("TagName = " + outval + " Start = " + intervalResult.start + " End = " + intervalResult.end + " Level = " + intervalResult.level);
+//				System.out.print("|| TagName = " + outval2 + " Start = " + intervalResult2.start + " End = " + intervalResult2.end + " Level = " + intervalResult2.level);
+//				System.out.println("|| TagName = " + outval3 + " Start = " + intervalResult3.start + " End = " + intervalResult3.end + " Level = " + intervalResult3.level);
+//				counter++;
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//			try {
+//				t = it.get_next();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
+    	
+//		System.out.println("Total Records: " + counter);
+    	// execute the query plan for the second pattern tree
+    	
+//    	for(int i=0; i<sortedRules.size(); i++){
+//    		this.QP3(sortedRules.get(i).get(0), sortedRules.get(i).get(1), sortedRules.get(i).get(2));
+//        }
+    	
+	}
+	
+	public SortMerge2 executeQP2ForAPatternTree(FileScan it1, FileScan it2, String fileNamePrefix) throws HFException, HFBufMgrException, HFDiskMgrException, IndexException, FileScanException, TupleUtilsException, InvalidRelation, IOException {
+		// ArrayList<NestedLoopsJoins> instances = nestedLoopInstanceList;
+    	FileScan sm1, sm2;
+    	FileScan it;
+    	SortMerge2 smInstance;
+    	
+    	int joinColumnIndex = 1; // incremented each time a new "tag" is added, because a tag will bring 2 columns
+    	
+        boolean status = OK;
+        
+        AttrType [] Stypes = new AttrType[4];
+        Stypes[0] = new AttrType (AttrType.attrInterval);
+        Stypes[1] = new AttrType (AttrType.attrString);
+        Stypes[2] = new AttrType (AttrType.attrInterval);
+        Stypes[3] = new AttrType (AttrType.attrString);
+        
+        short [] Ssizes = new short[2];
+        Ssizes[0] = 10;
+        Ssizes[1] = 10;
+
+        FldSpec [] projectionList = new FldSpec[6];
+        projectionList[0] = new FldSpec(new RelSpec(RelSpec.outer), 1);
+        projectionList[1] = new FldSpec(new RelSpec(RelSpec.outer), 2);
+        projectionList[2] = new FldSpec(new RelSpec(RelSpec.outer), 3);
+        projectionList[3] = new FldSpec(new RelSpec(RelSpec.outer), 4);
+        projectionList[4] = new FldSpec(new RelSpec(RelSpec.innerRel), 3);
+        projectionList[5] = new FldSpec(new RelSpec(RelSpec.innerRel), 4);
+        
+        
+        
+        TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
+        SortMerge2 tempInstance =null;
+        
+        if (!tagIndex.containsKey(sortedRules.get(0).get(0))) {
+        	tagIndex.put(sortedRules.get(0).get(0), currentTagIndex);
+        	 currentTagIndex+= 2;
+        }
+        
+        if (!tagIndex.containsKey(sortedRules.get(0).get(1))) {
+        	tagIndex.put(sortedRules.get(0).get(1), currentTagIndex);
+        	currentTagIndex+= 2;
+        }
+        
+        joinColumnIndex = tagIndex.get(sortedRules.get(currentInstanceIndex).get(0));
+        
+    	CondExpr[] expr = new CondExpr[2];
+    	expr[0] = new CondExpr();
+        expr[1] = null;
+        expr[0].next  = null;
+
+        expr[0].op    = new AttrOperator(AttrOperator.aopEQ);
+        
+        expr[0].type1 = new AttrType(AttrType.attrSymbol);
+        expr[0].type2 = new AttrType(AttrType.attrSymbol);
+        expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),joinColumnIndex);
+        expr[0].operand2.symbol = new FldSpec(new RelSpec(RelSpec.innerRel), 1);
+        expr[0].flag = 1;
+        
+        if (!tagIndex.containsKey(sortedRules.get(currentInstanceIndex).get(1))) {
+        	tagIndex.put(sortedRules.get(currentInstanceIndex).get(1), currentTagIndex);
+        	currentTagIndex+= 2;
+        }
+        
+        sm1 = it1;
+        sm2 = it2;     
+        
+        try {
+            tempInstance = new SortMerge2(Stypes, 4, Ssizes, Stypes, 4, Ssizes, joinColumnIndex, 12, 1, 12, 10, sm1, sm2, false, false, ascending, expr, projectionList, 6);
+        }
+        catch (Exception e) {
+            System.err.println("*** join error in SortMerge constructor ***");
+            status = FAIL;
+            System.err.println (""+e);
+            e.printStackTrace();
+        }
+        
+        
+    	currentInstanceIndex++;
+    	CondExpr[] condExpr;
+    	SortMerge2 sortMerge2Instance;
+    	
+    	int columnCount, tempVal;
+    	boolean flag = false;
+    	AttrType[] Stypes2;
+    	colLength = 6;
+
+    	SortMerge2 tempInstance2 = null;
+    	for (int index = currentInstanceIndex; index < sortedRules.size(); index++) {
+//    		sortMerge2Instance = tempInstance;
+//    		sm2 = sortMergeInstanceList.get(index);
+            
+            Stypes2 = new AttrType[4];
+            Stypes2[0] = new AttrType (AttrType.attrInterval);
+            Stypes2[1] = new AttrType (AttrType.attrString);
+            Stypes2[2] = new AttrType (AttrType.attrInterval);
+            Stypes2[3] = new AttrType (AttrType.attrString);
+            
+            AttrType[] Stypes1 = new AttrType[tagIndex.size()*2];
+            for (int currentColumn = 0; currentColumn < tagIndex.size()*2; currentColumn++) {
+            	if (currentColumn%2 == 0) {
+            		Stypes1[currentColumn] = new AttrType(AttrType.attrInterval);
+            	} else {
+            		Stypes1[currentColumn] = new AttrType(AttrType.attrString);
+            	}
+            }
+            
+            short[] Ssizes1 = new short[tagIndex.size()];
+            for (int i=0; i<tagIndex.size(); i++) {
+            	Ssizes1[i] = 10;
+            }
+            
+            short [] Ssizes2 = new short[2];
+            Ssizes2[0] = 10;
+            Ssizes2[1] = 10;
+            
+            
+            joinColumnIndex = tagIndex.get(sortedRules.get(index).get(0));
+            
+            if (!tagIndex.containsKey(sortedRules.get(index).get(1))) {
+            	tagIndex.put(sortedRules.get(index).get(1), currentTagIndex);
+            	currentTagIndex+= 2;
+            	currentProjCount+= 2;
+            	flag = true;
+            }
+            
+            tempVal = flag ? currentProjCount : currentProjCount-2;
+            FldSpec [] projectionList2 = new FldSpec[tempVal];
+            
+            colLength = tempVal;
+            for (int i=0; i<tempVal; i++) {
+            	projectionList2[i] = new FldSpec(new RelSpec(RelSpec.outer), i+1);
+            }
+            
+            if (flag) {
+                projectionList2[tempVal-2] = new FldSpec(new RelSpec(RelSpec.innerRel), 3);
+                projectionList2[tempVal-1] = new FldSpec(new RelSpec(RelSpec.innerRel), 4);
+            }           
+            
+            
+            tempInstance2 = tempInstance;
+            
+            it = this.queryRuleIteratorScan(sortedRules.get(index).get(0), sortedRules.get(index).get(1), sortedRules.get(index).get(2), index+1, fileNamePrefix);
+            // smInstance = this.SMJQPMixed(tempInstance, it2);  
+            
+            System.out.println("Column length: " + projectionList2.length);
+            
+            try {
+                tempInstance = new SortMerge2(Stypes1, Stypes1.length, Ssizes1, Stypes2, Stypes2.length, Ssizes2, joinColumnIndex, 12, 1, 12, 10, tempInstance2, it, false, false, ascending, expr, projectionList2, tempVal);
+            }
+            catch (Exception e) {
+                System.err.println("*** join error in SortMerge constructor ***");
+                status = FAIL;
+                System.err.println (""+e);
+                e.printStackTrace();
+            }
+    		
+        	flag = false;
+    	}
+    	
+    	return tempInstance;
+    	
+//    	boolean done = false;
+//        Tuple t = null;
+//        HashSet<String> tupleSet = new HashSet<>();
+//        try{
+//            while(!done){
+//                t = tempInstance.get_next();
+//                if(t == null) {
+//                    done = true;
+//                    break;
+//                }
+//                
+//               String res = "";
+//                for (int k=1; k<=colLength; k++) {
+//                	if(k%2 != 0) {
+//                		res += " | Start = " + t.getIntervalFld(k).getStart() + " End = " + t.getIntervalFld(k).getEnd() + " Level = " + t.getIntervalFld(k).getLevel();
+////                		System.out.print(" | Start = " + t.getIntervalFld(k).getStart() + " End = " + t.getIntervalFld(k).getEnd() + " Level = " + t.getIntervalFld(k).getLevel());
+//                	}else {
+//                		res += " TagName = " + t.getStrFld(k);
+////                		System.out.print(" TagName = " + t.getStrFld(k) );
+//                	}
+//                           
+//                }
+////                System.out.println();
+//                globalResults.add(res);
+//            }
+//            
+//        } catch(Exception e){
+//            e.printStackTrace();
+//        }
+	}
+
+	public static void main(String[] args) throws FileNotFoundException, ParserConfigurationException, SAXException, IOException, HashOperationException, PageUnpinnedException, PagePinnedException, PageNotFoundException, BufMgrException, HFException, HFBufMgrException, HFDiskMgrException, FileScanException, TupleUtilsException, InvalidRelation, IndexException {
+
+
+		System.out.println("XMLQP2");
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setValidating(false);
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document doc = db.parse(new FileInputStream(new File("/home/ronak/DBMSi Project/Phase3/dbmsiPhase2/javaminibase/src/xmldbTestXML/sample_data.xml")));
+
+		Node root = doc.getDocumentElement();
+
+		xmlParser.build(root);
+		xmlParser.preOrder(xmlParser.tree.root);
+		xmlParser.BFSSetLevel();
+
+		// A B OP -> firstTag lastTag aopAD/aopPC
+		String firstTag = "root";
+		String lastTag = "Entry";
+		String op = "AD"; //CP
+
+		qp2 = new XMLQP2();
+		qp2.xmlDataInsert();
+
+		qp2.QP2Wrapper();
+
+//		FileScan scan = qp2.queryRuleIteratorScan(firstTag, lastTag, op, 1);
+//		
+//		firstTag = "root";
+//		lastTag = "Mod";
+//		op = "AD";
+//		
+//		FileScan scan2 = qp2.queryRuleIteratorScan(firstTag, lastTag, op, 2);
+//		
+//		Iterator it = qp2.SMJQP(scan, scan2);
+//		
+//		// Iterator it = scan2;
+//		
+//		Tuple t = null;
+//
+//		try {
+//			t = it.get_next();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}	
+//		while(t!=null) {
+//			String outval;
+//			IntervalType intervalResult;
+//			String outval2;
+//			IntervalType intervalResult2;
+//			String outval3;
+//			IntervalType intervalResult3;
+//			
+//			try {
+//				outval = t.getStrFld(2);
+//				intervalResult = t.getIntervalFld(1);
+//				outval2 = t.getStrFld(4);
+//				intervalResult2 = t.getIntervalFld(3);
+//				intervalResult3 = t.getIntervalFld(5);
+//				outval3 = t.getStrFld(6);
+//				
+//				System.out.print("TagName = " + outval + " Start = " + intervalResult.start + " End = " + intervalResult.end + " Level = " + intervalResult.level);
+//				System.out.print("|| TagName = " + outval2 + " Start = " + intervalResult2.start + " End = " + intervalResult2.end + " Level = " + intervalResult2.level);
+//				System.out.println("|| TagName = " + outval3 + " Start = " + intervalResult3.start + " End = " + intervalResult3.end + " Level = " + intervalResult3.level);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//			try {
+//				t = it.get_next();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
 	}
 }
