@@ -276,7 +276,14 @@ public class SortMerge2 extends Iterator implements GlobalConst
 				    		  System.out.println( "Tuple1: Start = " + tuple1.getIntervalFld(1).getStart() + " End = " +  tuple1.getIntervalFld(1).getEnd() + " Level = " + tuple1.getIntervalFld(1).getLevel() +" tagName: " +tuple1.getStrFld(2)+" | "+"Start = " + tuple1.getIntervalFld(3).getStart() + " End = " +  tuple1.getIntervalFld(3).getEnd() + " Level = " + tuple1.getIntervalFld(3).getLevel() +" tagName: " +tuple1.getStrFld(4)+" | "+"Start = " + tuple1.getIntervalFld(5).getStart() + " End = " +  tuple1.getIntervalFld(5).getEnd() + " Level = " + tuple1.getIntervalFld(5).getLevel() +" tagName: " +tuple1.getStrFld(6)+" | "+"Start = " + tuple1.getIntervalFld(7).getStart() + " End = " +  tuple1.getIntervalFld(7).getEnd() + " Level = " + tuple1.getIntervalFld(7).getLevel() +" tagName: " +tuple1.getStrFld(8)+" | "+"Start = " + tuple1.getIntervalFld(9).getStart() + " End = " +  tuple1.getIntervalFld(9).getEnd() + " Level = " + tuple1.getIntervalFld(9).getLevel() +" tagName: " +tuple1.getStrFld(10));
 				    		  System.out.println( "Tuple2: Start = " + tuple2.getIntervalFld(1).getStart() + " End = " +  tuple2.getIntervalFld(1).getEnd() + " Level = " + tuple2.getIntervalFld(1).getLevel() +" tagName: " +tuple2.getStrFld(2)+" | "+"Start = " + tuple2.getIntervalFld(3).getStart() + " End = " +  tuple2.getIntervalFld(3).getEnd() + " Level = " + tuple2.getIntervalFld(3).getLevel() +" tagName: " +tuple2.getStrFld(4));
 				    	  }else {
-				    		  System.out.println( "Tuple1: Start = " + tuple1.getIntervalFld(1).getStart() + " End = " +  tuple1.getIntervalFld(1).getEnd() + " Level = " + tuple1.getIntervalFld(1).getLevel() +" tagName: " +tuple1.getStrFld(2)+" | "+"Start = " + tuple1.getIntervalFld(3).getStart() + " End = " +  tuple1.getIntervalFld(3).getEnd() + " Level = " + tuple1.getIntervalFld(3).getLevel() +" tagName: " +tuple1.getStrFld(4));
+				    		  // System.out.println( "Tuple1: Start = " + tuple1.getIntervalFld(1).getStart() + " End = " +  tuple1.getIntervalFld(1).getEnd() + " Level = " + tuple1.getIntervalFld(1).getLevel() +" tagName: " +tuple1.getStrFld(2)+" | "+"Start = " + tuple1.getIntervalFld(3).getStart() + " End = " +  tuple1.getIntervalFld(3).getEnd() + " Level = " + tuple1.getIntervalFld(3).getLevel() +" tagName: " +tuple1.getStrFld(4));
+				    		  
+				    		  System.out.println(tuple1.getIntervalFld(1).getStart());
+				    		  System.out.println(tuple1.getIntervalFld(1).getEnd());
+				    		  System.out.println(tuple1.getIntervalFld(1).getLevel());
+				    		  System.out.println(tuple1.getStrFld(2));
+				    		  
+				    		  System.out.println(tuple1.getStrFld(4));
 				    		  System.out.println( "Tuple2: Start = " + tuple2.getIntervalFld(1).getStart() + " End = " +  tuple2.getIntervalFld(1).getEnd() + " Level = " + tuple2.getIntervalFld(1).getLevel() +" tagName: " +tuple2.getStrFld(2)+" | "+"Start = " + tuple2.getIntervalFld(3).getStart() + " End = " +  tuple2.getIntervalFld(3).getEnd() + " Level = " + tuple2.getIntervalFld(3).getLevel() +" tagName: " +tuple2.getStrFld(4));				    		  
 				    	  }
 			    	  }else {
