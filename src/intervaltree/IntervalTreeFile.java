@@ -637,6 +637,63 @@ public class IntervalTreeFile extends IndexFile implements GlobalConst {
 		}
 
 		newRootEntry = _insert(key, rid, headerPage.get_rootId());
+		
+		// TWO CASES:
+	      // - newRootEntry != null: a leaf split propagated up to the root
+	      //                            and the root split: the new pageNo is in
+	      //                            newChildEntry.data.pageNo 
+	      // - newRootEntry == null: no new root was created;
+	      //                            information on headerpage is still valid
+	      
+	      // ASSERTIONS:
+	      // - no page pinned
+	      
+		if (newRootEntry != null) {
+			IntervalTIndexPage newRootPage;
+			PageId newRootPageId;
+			Object newEntryKey;
+
+			// the information about the pair <key, PageId> is
+			// packed in newRootEntry: extract it
+
+			newRootPage = new IntervalTIndexPage(headerPage.get_keyType());
+			newRootPageId = newRootPage.getCurPage();
+
+			// ASSERTIONS:
+			// - newRootPage, newRootPageId valid and pinned
+			// - newEntryKey, newEntryPage contain the data for the new entry
+			// which was given up from the level down in the recursion
+
+			if (trace != null) {
+				trace.writeBytes("NEWROOT " + newRootPageId + lineSep);
+				trace.flush();
+			}
+
+			if (newRootEntry.key == null)
+				try {
+//					System.out.println(headerPage.get_keyType());
+					throw new InsertRecException("Cannot insert...");
+				} catch (InsertRecException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			newRootPage.insertKey(newRootEntry.key, ((IndexData) newRootEntry.data).getData());
+
+			// the old root split and is now the left child of the new root
+			newRootPage.setPrevPage(headerPage.get_rootId());
+
+			unpinPage(newRootPageId, true /* = DIRTY */);
+
+			updateHeader(newRootPageId);
+
+		}
+
+		if (trace != null) {
+			trace.writeBytes("DONE" + lineSep);
+			trace.flush();
+		}
+
+		return;
 	}
 
 	private KeyDataEntry _insert(KeyClass key, RID rid, PageId currentPageId)
